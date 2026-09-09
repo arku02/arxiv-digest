@@ -1,0 +1,10 @@
+# 安裝：pip install -r requirements.txt
+# 版本沿用期中專案已驗證可用的組合（Python 3.13）
+
+requests==2.34.0          # 呼叫 arXiv API
+beautifulsoup4==4.14.3    # 解析回傳的 Atom XML
+lxml==6.1.0               # BeautifulSoup 的 xml parser
+PyMySQL==1.2.0            # 連線 MySQL
+
+# --- P3 才會用到，屆時安裝後再補上版本號 ---
+# anthropic               # LLM 評分

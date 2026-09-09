@@ -1,0 +1,22 @@
+# 複製這個檔案為 config.ini，填入自己的設定。
+# config.ini 已被 .gitignore 忽略，不會進版控。
+
+[DB]
+host = localhost
+user = root
+password = YOUR_PASSWORD_HERE
+port = 3306
+# 刻意與期中專案的 arxiv_db 分開，避免兩邊的 schema 互相干擾
+database = arxiv_digest_db
+
+[ARXIV]
+# 要訂閱的分類，逗號分隔。語法同 arXiv API，例如 cs.CV, cs.CL, cs.LG
+categories = cs.CV, cs.CL
+# 單次 API 請求抓幾筆（arXiv 單次上限 2000，分頁會自動處理）
+page_size = 100
+# 單次執行最多抓幾筆，防止久未執行時一口氣拉爆
+max_results = 1000
+# 每次 API 請求之間隔幾秒（arXiv 官方建議至少 3 秒）
+request_delay = 3.0
+# 從未執行過時，第一次要回溯幾天
+initial_backfill_days = 1

@@ -1,0 +1,21 @@
+# --- 機密設定 ---
+config.ini
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# --- 虛擬環境 ---
+.venv/
+venv/
+env/
+
+# --- 編輯器 / 系統 ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# --- 執行輸出 ---
+*.log
