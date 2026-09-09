@@ -140,7 +140,8 @@ class Store:
             for statement in SCHEMA_STATEMENTS:
                 cursor.execute(statement)
         db.commit()
-        logger.info("資料表建立完成：papers / authors / scores / feedback / runs")
+        # 每個指令都會呼叫這個方法，用 info 會讓 daily / status 的輸出多一行雜訊
+        logger.debug("資料表建立完成：papers / authors / scores / feedback / runs")
 
     # ---------------- 論文寫入 ----------------
 

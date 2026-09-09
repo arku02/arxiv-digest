@@ -9,8 +9,8 @@
 
 | 階段 | 內容 | 狀態 |
 |---|---|---|
-| P0 | 專案骨架、資料庫 schema | ✅ 完成 |
-| P1 | 每日自動抓取（增量、去重、限速、斷點續傳） | ✅ 完成 |
+| P0 | 專案骨架、資料庫 schema | ✅ 完成並驗證 |
+| P1 | 每日自動抓取（增量、去重、限速、斷點續傳） | ✅ 完成並驗證 |
 | P2 | 推送管線 + 回饋收集 | ⬜ 未開始 |
 | P3 | LLM 興趣評分，只推 top N | ⬜ 未開始 |
 | P4 | 向量粗篩降低成本、用回饋資料做個人化 | ⬜ 未開始 |
@@ -23,10 +23,17 @@
 需要 Python 3.12 以上與 MySQL 8.0 以上。
 
 ```bash
-python -m venv .venv
-.venv\Scripts\activate
 pip install -r requirements.txt
 ```
+
+想跟其他專案隔離的話，可以先建虛擬環境再安裝（非必要）：
+
+```bash
+python -m venv .venv
+.venv\Scripts\activate
+```
+
+用了虛擬環境的話，記得排程設定的 Python 路徑也要跟著換，見下方。
 
 ## 設定
 
@@ -42,7 +49,14 @@ categories = cs.CV, cs.CL
 ```
 
 分類語法沿用 arXiv API，例如 `cs.CV`（電腦視覺）、`cs.CL`（計算語言學）、`cs.LG`（機器學習）。
-訂閱量會直接影響之後 P3 的 API 花費 —— 實測 `cs.CV` 單日約 158 篇。
+
+訂閱量會直接影響之後 P3 的 API 花費。實測 `cs.CV` + `cs.CL` 的每日論文量（2026/08/31–09/08）：
+
+| 一 | 二 | 三 | 四 | 五 | 六 | 日 |
+|---|---|---|---|---|---|---|
+| 317 | 287 | 221 | 222 | 160 | 86 | 100 |
+
+平均約 **194 篇/天**，週末明顯少、週一最多。估算成本時用平均值，別用高峰值。
 
 ## 使用
 
@@ -62,11 +76,15 @@ python -m arxiv_digest status             # 看最近的執行紀錄
 
 | 欄位 | 值 |
 |---|---|
-| 程式或指令碼 | `<PROJECT_ROOT>\.venv\Scripts\python.exe` |
+| 程式或指令碼 | `<LOCAL_PATH>` |
 | 新增引數 | `-m arxiv_digest daily` |
 | 開始位置 | `<PROJECT_ROOT>` |
 
 「開始位置」不能省略，否則找不到 `config.ini`。
+
+「程式或指令碼」填的是實際要用的 Python 路徑：直接用全域 Python 就是上表那個，
+若改用虛擬環境則換成 `<專案目錄>\.venv\Scripts\python.exe`。
+用 `python -c "import sys; print(sys.executable)"` 可以查到目前用的是哪一個。
 
 ## 資料庫結構
 
