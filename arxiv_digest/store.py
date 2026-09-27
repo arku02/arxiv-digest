@@ -64,7 +64,7 @@ SCHEMA_STATEMENTS = [
     CREATE TABLE IF NOT EXISTS feedback(
         id         INT AUTO_INCREMENT PRIMARY KEY,
         paper_id   INT NOT NULL,
-        label      TINYINT NOT NULL,             -- 1=有興趣 0=沒興趣
+        label      TINYINT NOT NULL,             -- 0=沒興趣 1=有興趣 2=超想讀
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (paper_id) REFERENCES papers(id) ON DELETE CASCADE,
         UNIQUE KEY uniq_paper (paper_id)         -- 同一篇只留一次表態
@@ -429,6 +429,55 @@ class Store:
                 (status, sent, error[:500] if error else None, batch_id),
             )
         db.commit()
+
+    # ---------------- 回饋 ----------------
+
+    def pushed_paper_for_message(self, chat_id: str, message_id: int) -> int | None:
+        """這則 Telegram 訊息推送的是哪篇論文；不是我們推的就回傳 None。"""
+        with self._require_db().cursor() as cursor:
+            cursor.execute(
+                "SELECT paper_id FROM pushes WHERE chat_id = %s AND message_id = %s",
+                (chat_id, message_id),
+            )
+            row = cursor.fetchone()
+        return row["paper_id"] if row else None
+
+    def save_feedback(self, paper_id: int, label: int) -> None:
+        """寫入或覆蓋一篇論文的回饋，重複執行結果相同。
+
+        不靠 UPDATE 的影響列數判斷是否存在：pymysql 預設不把「值沒變」的列算進去。
+        """
+        db = self._require_db()
+        with db.cursor() as cursor:
+            cursor.execute("SELECT label FROM feedback WHERE paper_id = %s", (paper_id,))
+            row = cursor.fetchone()
+            if row is None:
+                cursor.execute(
+                    "INSERT INTO feedback (paper_id, label) VALUES (%s, %s)",
+                    (paper_id, label),
+                )
+            elif row["label"] != label:
+                cursor.execute(
+                    "UPDATE feedback SET label = %s WHERE paper_id = %s",
+                    (label, paper_id),
+                )
+        db.commit()
+
+    def feedback_summary(self) -> dict:
+        """推送篇數、回饋篇數與各標籤篇數。"""
+        with self._require_db().cursor() as cursor:
+            cursor.execute("SELECT COUNT(*) AS n FROM pushes")
+            pushed = cursor.fetchone()["n"]
+            cursor.execute(
+                """
+                SELECT f.label, COUNT(*) AS n
+                FROM feedback AS f
+                WHERE EXISTS (SELECT 1 FROM pushes AS s WHERE s.paper_id = f.paper_id)
+                GROUP BY f.label
+                """
+            )
+            labels = {row["label"]: row["n"] for row in cursor.fetchall()}
+        return {"pushed": pushed, "labels": labels}
 
     def count_papers(self) -> int:
         """目前資料庫裡有幾篇論文。"""

@@ -5,6 +5,7 @@
   "pythonExecutable": "python",
   "testFiles": [
     "tests/test_fetch_checkpoint.py",
-    "tests/test_telegram_push.py"
+    "tests/test_telegram_push.py",
+    "tests/test_feedback_collect.py"
   ]
 }

@@ -1,0 +1,9 @@
+{
+  "change": "add-feedback-collect",
+  "capturedAt": "2026-09-27T08:21:15.438Z",
+  "specs": {
+    "openspec/specs/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "openspec/specs/fetch-checkpoint/spec.md": "878e9a3f9b6bbe86822065c997092a37a1865dc715af1724722efcf6d2a22e17",
+    "openspec/specs/telegram-push/spec.md": "697d12bd1256fc369a89dd846881d90b09f066c49e675c83b0738972b41597ec"
+  }
+}

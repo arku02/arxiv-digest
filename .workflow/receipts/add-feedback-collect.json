@@ -1,0 +1,57 @@
+{
+  "change": "add-feedback-collect",
+  "archivedAt": "2026-09-27T08:32:21.002Z",
+  "archive": "openspec/changes/archive/2026-09-27-add-feedback-collect",
+  "verifiedDigest": "7575752d242d73d015cb874c1f0c8e67b0aafd3477835e9b0b8f52932362a531",
+  "specs": {
+    "openspec/specs/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "openspec/specs/feedback-collect/spec.md": "a90c1e5ef38f44fd627d65950601357faf891fab0e0d922f8c28d99e8f803f34",
+    "openspec/specs/fetch-checkpoint/spec.md": "878e9a3f9b6bbe86822065c997092a37a1865dc715af1724722efcf6d2a22e17",
+    "openspec/specs/telegram-push/spec.md": "697d12bd1256fc369a89dd846881d90b09f066c49e675c83b0738972b41597ec"
+  },
+  "validation": {
+    "items": [
+      {
+        "id": "feedback-collect",
+        "type": "spec",
+        "valid": true,
+        "issues": [],
+        "durationMs": 21
+      },
+      {
+        "id": "fetch-checkpoint",
+        "type": "spec",
+        "valid": true,
+        "issues": [],
+        "durationMs": 4
+      },
+      {
+        "id": "telegram-push",
+        "type": "spec",
+        "valid": true,
+        "issues": [],
+        "durationMs": 1
+      }
+    ],
+    "summary": {
+      "totals": {
+        "items": 3,
+        "passed": 3,
+        "failed": 0
+      },
+      "byType": {
+        "spec": {
+          "items": 3,
+          "passed": 3,
+          "failed": 0
+        }
+      }
+    },
+    "version": "1.0",
+    "root": {
+      "path": "<PROJECT_ROOT>",
+      "source": "nearest"
+    }
+  },
+  "output": "{\n  \"archive\": {\n    \"change\": \"add-feedback-collect\",\n    \"archivedAs\": \"2026-09-27-add-feedback-collect\",\n    \"path\": \"<PROJECT_ROOT>\\\\openspec\\\\changes\\\\archive\\\\2026-09-27-add-feedback-collect\",\n    \"specsUpdated\": true,\n    \"totals\": {\n      \"added\": 5,\n      \"modified\": 0,\n      \"removed\": 0,\n      \"renamed\": 0\n    }\n  },\n  \"root\": {\n    \"path\": \"<PROJECT_ROOT>\",\n    \"source\": \"nearest\"\n  }\n}\n"
+}

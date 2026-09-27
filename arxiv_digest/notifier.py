@@ -1,4 +1,4 @@
-"""Telegram 推送：訊息格式、回饋按鈕、Bot API 呼叫。
+"""Telegram 推送與回饋：訊息格式、回饋按鈕、Bot API 呼叫。
 
 按鈕的 callback data 固定為 fb:<paper_id>:<label>，label 0=沒興趣、
 1=有興趣、2=超想讀。收集回饋時靠這個格式對回論文，改動前要一併調整收集端。
@@ -21,6 +21,9 @@ SUMMARY_LIMIT = 300
 AUTHOR_LIMIT = 3
 
 BUTTONS = (("👎 沒興趣", 0), ("👍 有興趣", 1), ("⭐ 超想讀", 2))
+
+# getUpdates 單次最多取幾筆（Telegram 上限 100）
+UPDATE_LIMIT = 100
 
 
 class TelegramError(RuntimeError):
@@ -65,18 +68,21 @@ def format_message(paper: PushPaper) -> str:
     )
 
 
-def keyboard(paper_id: int) -> dict:
-    """一列三個回饋按鈕。"""
+def keyboard(paper_id: int, selected: int | None = None) -> dict:
+    """一列三個回饋按鈕。selected 為已記錄的標籤，在該按鈕前加 ✅，其他仍可改按。"""
     return {
         "inline_keyboard": [[
-            {"text": text, "callback_data": f"fb:{paper_id}:{label}"}
+            {
+                "text": ("✅ " if label == selected else "") + text,
+                "callback_data": f"fb:{paper_id}:{label}",
+            }
             for text, label in BUTTONS
         ]]
     }
 
 
 class TelegramClient:
-    """呼叫 Bot API 的 sendMessage。所有錯誤都轉成已遮蔽 token 的 TelegramError。"""
+    """呼叫 Bot API。所有錯誤都轉成已遮蔽 token 的 TelegramError。"""
 
     def __init__(self, token: str, chat_id: str, session: requests.Session | None = None):
         self.token = token
@@ -88,14 +94,37 @@ class TelegramClient:
 
     def send(self, text: str, reply_markup: dict) -> int:
         """送出一則訊息，回傳 Telegram 的 message_id。"""
-        payload = {
+        result = self._call("sendMessage", {
             "chat_id": self.chat_id,
             "text": text,
             "parse_mode": "HTML",
             "link_preview_options": {"is_disabled": True},
             "reply_markup": reply_markup,
-        }
-        url = f"{API_BASE}/bot{self.token}/sendMessage"
+        })
+        return result["message_id"]
+
+    def get_updates(self, offset: int | None) -> list[dict]:
+        """取得待處理更新。帶 offset 呼叫時，update_id 小於 offset 的更新即被確認。"""
+        payload = {"timeout": 0, "limit": UPDATE_LIMIT, "allowed_updates": ["callback_query"]}
+        if offset is not None:
+            payload["offset"] = offset
+        return self._call("getUpdates", payload)
+
+    def edit_markup(self, message_id: int, reply_markup: dict) -> None:
+        """更新訊息按鈕。內容完全相同時 Telegram 回 400 not modified，視為成功。"""
+        try:
+            self._call("editMessageReplyMarkup", {
+                "chat_id": self.chat_id,
+                "message_id": message_id,
+                "reply_markup": reply_markup,
+            })
+        except TelegramError as exc:
+            if "message is not modified" not in str(exc):
+                raise
+
+    def _call(self, method: str, payload: dict):
+        """呼叫一個 Bot API 方法，回傳 result 欄位。"""
+        url = f"{API_BASE}/bot{self.token}/{method}"
         try:
             response = self.session.post(url, json=payload, timeout=30)
             try:
@@ -107,7 +136,7 @@ class TelegramClient:
             raise TelegramError(self._mask(f"Telegram 連線失敗：{exc}")) from None
 
         if response.status_code == 200 and body.get("ok"):
-            return body["result"]["message_id"]
+            return body["result"]
 
         description = self._mask(str(body.get("description", "")))
         if response.status_code == 403:

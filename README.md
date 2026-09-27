@@ -11,7 +11,7 @@
 |---|---|---|
 | P0 | 專案骨架、資料庫 schema | 已實作 |
 | P1 | 每日抓取（增量、去重、限速、斷點續傳、公告延遲回看） | 已實作；22 項離線測試，驗證邊界見下方 |
-| P2 | 推送管線 + 回饋收集 | 推送已實作（16 項離線測試；2026-09-27 實機推送 10 篇成功）；回饋收集未開始 |
+| P2 | 推送管線 + 回饋收集 | 已實作；推送 16 項、收集 15 項離線測試，2026-09-27 實機推送 10 篇成功 |
 | P3 | LLM 興趣評分，只推 top N | ⬜ 未開始 |
 | P4 | 向量粗篩降低成本、用回饋資料做個人化 | ⬜ 未開始 |
 
@@ -67,6 +67,7 @@ python -m arxiv_digest backfill --days 7  # 回頭補抓過去 7 天
 python -m arxiv_digest status             # 看最近的執行紀錄
 python -m arxiv_digest push --dry-run     # 預覽今天要推送的論文，不發送
 python -m arxiv_digest push               # 推送到 Telegram
+python -m arxiv_digest collect            # 收集按鈕回饋
 ```
 
 排程只要固定跑 `daily`。它從 `runs` 表裡「上次成功執行涵蓋到的時間點」往前 `lookback_days` 天（預設 4）接續，
@@ -112,7 +113,16 @@ python -m arxiv_digest backfill --days 10
 4. 填入 `config.ini` 的 `[TELEGRAM]`，先跑 `push --dry-run` 看內容，再跑 `push`
 
 推送到一半失敗時，已送出的會保留，本批記為失敗，下次 `push` 從剩下的候選重新抽。錯誤訊息會把 bot token 換成 `<bot_token>`。
-按鈕回饋目前還不會被收集，由下一個變更 add-feedback-collect 處理；Telegram 只保留 24 小時內未讀取的按鈕點擊。
+
+### 收集回饋
+
+`collect` 讀取你按下的按鈕，存進 `feedback`（0=沒興趣、1=有興趣、2=超想讀），每篇一筆，改按其他按鈕以最後一次為準。
+存好後訊息上的按鈕會在目前選擇前加 ✅，其他按鈕仍可改按。`status` 會顯示推送篇數、回饋篇數、回饋率與三種回饋的篇數。
+
+- 按下按鈕後不會立刻有反應，按鈕會轉圈一下，等下一次 `collect` 執行後才出現 ✅
+- Telegram 只保留 24 小時內還沒讀取的點擊，所以 `collect` 要每小時排程執行；超過 24 小時沒收到的點擊會遺失，再按一次即可
+- 只接受來自 `chat_id` 本人、而且對得上推送紀錄的點擊，其他更新會略過
+- 處理到一半失敗時不會向 Telegram 確認，下次會重送同一批，結果不變
 
 ### 離線驗證與變更流程
 
@@ -142,6 +152,8 @@ workflow.config.json 的 pythonExecutable 指向實際 Python；移到其他電�
 要推送的話，在同一個工作的「動作」頁再新增一個動作，程式與開始位置相同、引數填 `-m arxiv_digest push`。多個動作會依序執行，推送會在抓取之後。
 arXiv 約在台灣時間早上 8 點公告，排程設在 8 點半之後，當天新論文才會進候選。
 
+收集回饋另外建一個工作：觸發程序選「每日」，進階設定勾選「重複工作間隔：1 小時」、「持續時間：無限期」，引數填 `-m arxiv_digest collect`，程式與開始位置同上。
+
 「程式或指令碼」填的是實際要用的 Python 路徑：請填入本機實際路徑，
 若改用虛擬環境則換成 `<專案目錄>\.venv\Scripts\python.exe`。
 用 `python -c "import sys; print(sys.executable)"` 可以查到目前用的是哪一個。
@@ -155,7 +167,7 @@ arXiv 約在台灣時間早上 8 點公告，排程設在 8 點半之後，當�
 | `papers` | 論文主表 | `arxiv_id` UNIQUE，**不含版本號** |
 | `authors` | 作者表 | `paper_id` FK → papers.id，一對多 |
 | `scores` | LLM 評分結果 | P3 開始使用 |
-| `feedback` | 你的「有興趣 / 沒興趣」 | 未來個人化模型的訓練資料 |
+| `feedback` | 你的回饋：0 沒興趣、1 有興趣、2 超想讀 | `paper_id` UNIQUE，改按以最後一次為準 |
 | `runs` | 每次執行涵蓋的時間區間 | 斷點續傳靠這張表 |
 | `push_batches` | 每次推送的批次 | 候選篇數、送出篇數、成功／失敗 |
 | `pushes` | 每篇推送紀錄 | `paper_id` UNIQUE，保存 Telegram message_id |
@@ -178,7 +190,7 @@ arxiv_digest/
 ├── config.py     設定讀取
 ├── fetcher.py    arXiv API：增量查詢、分頁、限速、重試
 ├── store.py      MySQL：建表、去重寫入、執行與推送紀錄
-├── notifier.py   Telegram：訊息格式、回饋按鈕、Bot API
+├── notifier.py   Telegram：訊息格式、回饋按鈕、推送與讀取更新
 └── cli.py        命令列進入點
 ```
 

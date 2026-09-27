@@ -6,6 +6,7 @@
     python -m arxiv_digest status           看最近的執行紀錄
     python -m arxiv_digest push             推送今天的論文到 Telegram
     python -m arxiv_digest push --dry-run   只預覽，不發送
+    python -m arxiv_digest collect          收集 Telegram 按鈕回饋
 
 排程只要固定跑 daily 就好。它會自己從「上次成功執行涵蓋到的時間點」接續，
 所以筆電關機好幾天再開，中間的論文一樣補得回來。接續時會再往回重查
@@ -17,6 +18,7 @@ from __future__ import annotations
 import argparse
 import logging
 import random
+import re
 import sys
 import time
 from datetime import datetime, timedelta, timezone
@@ -157,6 +159,64 @@ def run_push(
         return sent
 
 
+# 推送按鈕的 callback data：fb:<paper_id>:<label>，label 0=沒興趣 1=有興趣 2=超想讀
+_CALLBACK = re.compile(r"^fb:(\d+):([012])$")
+
+
+def _feedback_from_update(update: dict, chat_id: str, store: Store) -> tuple[int, int, int] | None:
+    """驗證一筆更新，有效時回傳 (paper_id, label, message_id)，否則 None。"""
+    query = update.get("callback_query")
+    if not query:
+        return None
+    message = query.get("message") or {}
+    if str((message.get("chat") or {}).get("id")) != chat_id:
+        return None
+    match = _CALLBACK.match(query.get("data") or "")
+    if not match or "message_id" not in message:
+        return None
+    paper_id, label = int(match.group(1)), int(match.group(2))
+    # 要對得上我們推過的那則訊息，防止偽造或對錯論文
+    if store.pushed_paper_for_message(chat_id, message["message_id"]) != paper_id:
+        return None
+    return paper_id, label, message["message_id"]
+
+
+def run_collect(config: Config) -> dict:
+    """讀取按鈕點擊並寫入回饋。
+
+    每批處理完，下一次 getUpdates 帶新的 offset 才算確認；中途失敗就不再呼叫，
+    未確認的更新下次會重送，寫入可重複執行所以結果不變。
+    """
+    token, chat_id = config.telegram.credentials()
+    counts = {"saved": 0, "ignored": 0}
+
+    with Store(config.db) as store:
+        store.init_schema()
+        client = TelegramClient(token, chat_id)
+        offset = None
+        while True:
+            updates = client.get_updates(offset)
+            if not updates:
+                break
+            for update in updates:
+                found = _feedback_from_update(update, chat_id, store)
+                if found is None:
+                    counts["ignored"] += 1
+                    continue
+                paper_id, label, message_id = found
+                store.save_feedback(paper_id, label)
+                counts["saved"] += 1
+                try:
+                    client.edit_markup(message_id, keyboard(paper_id, selected=label))
+                except Exception as exc:
+                    # 按鈕只是顯示用，回饋已經存好了
+                    logger.warning("回饋已記錄，但更新按鈕失敗：%s", exc)
+            offset = updates[-1]["update_id"] + 1
+
+    logger.info("收集完成：記錄 %d 筆回饋，略過 %d 筆更新", counts["saved"], counts["ignored"])
+    return counts
+
+
 def cmd_init_db(args: argparse.Namespace, config: Config) -> int:
     with Store(config.db) as store:
         store.init_schema()
@@ -180,14 +240,27 @@ def cmd_push(args: argparse.Namespace, config: Config) -> int:
     return 0
 
 
+def cmd_collect(args: argparse.Namespace, config: Config) -> int:
+    run_collect(config)
+    return 0
+
+
 def cmd_status(args: argparse.Namespace, config: Config) -> int:
     with Store(config.db) as store:
         store.init_schema()
         total = store.count_papers()
         runs = store.recent_runs(limit=args.limit)
+        summary = store.feedback_summary()
 
+    labels = summary["labels"]
+    answered = sum(labels.values())
+    rate = answered / summary["pushed"] if summary["pushed"] else 0
     print(f"訂閱分類：{', '.join(config.arxiv.categories)}")
-    print(f"資料庫現有論文：{total} 篇\n")
+    print(f"資料庫現有論文：{total} 篇")
+    print(
+        f"推送 {summary['pushed']} 篇，回饋 {answered} 篇（回饋率 {rate:.0%}）："
+        f"👎 {labels.get(0, 0)}  👍 {labels.get(1, 0)}  ⭐ {labels.get(2, 0)}\n"
+    )
 
     if not runs:
         print("尚無執行紀錄。先跑一次 daily 吧。")
@@ -228,6 +301,8 @@ def build_parser() -> argparse.ArgumentParser:
     push = sub.add_parser("push", help="推送今天的論文到 Telegram")
     push.add_argument("--dry-run", action="store_true", help="只印出內容，不發送也不記錄")
 
+    sub.add_parser("collect", help="收集 Telegram 按鈕回饋")
+
     return parser
 
 
@@ -237,6 +312,7 @@ COMMANDS = {
     "backfill": cmd_backfill,
     "status": cmd_status,
     "push": cmd_push,
+    "collect": cmd_collect,
 }
 
 
