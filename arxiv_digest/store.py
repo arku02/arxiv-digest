@@ -8,6 +8,8 @@
    feedback 累積起來就是未來做個人化模型的訓練資料。
 4. 每篇論文獨立 commit：論文寫進去但作者寫失敗時會整篇回滾，
    不會留下沒有作者的孤兒論文。
+5. push_batches / pushes 記錄每次推送的候選數與每則 Telegram 訊息，
+   收集回饋時靠它把按鈕點擊對回論文。
 """
 
 from __future__ import annotations

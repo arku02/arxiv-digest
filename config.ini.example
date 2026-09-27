@@ -10,13 +10,14 @@ port = 3306
 database = arxiv_digest_db
 
 [ARXIV]
-# 要訂閱的分類，逗號分隔。語法同 arXiv API，例如 cs.CV, cs.CL, cs.LG
-categories = cs.CV, cs.CL
+# 要訂閱的分類，逗號分隔。語法同 arXiv API，例如 cs.AI, cs.CL, cs.CV, cs.LG
+# 這 3 個分類合計約 263 篇/天（2026/09/14–09/20 實測）
+categories = cs.AI, cs.CL, cs.CV
 # 單次 API 請求抓幾筆（arXiv 單次上限 2000，分頁會自動處理）
 page_size = 100
 # 單次執行最多抓幾筆，防止久未執行時一口氣拉爆。
-# daily 含回看約查 5 天，平日約 800～1300 筆，1000 不夠用
-max_results = 2000
+# daily 含回看約查 5 天；3 個分類約 1300～1500 筆，至少設 2000
+max_results = 3000
 # 每次 API 請求之間隔幾秒（arXiv 官方建議至少 3 秒）
 request_delay = 3.0
 # 從未執行過時，第一次要回溯幾天
@@ -31,7 +32,7 @@ bot_token = YOUR_BOT_TOKEN_HERE
 # 你自己的數字 ID，跟 @userinfobot 對話就會回給你
 # 填好後要先在 Telegram 對自己的 bot 按一次 Start，bot 才能傳訊息給你
 chat_id = YOUR_CHAT_ID_HERE
-# 每天推送幾篇（P2 先隨機取樣，P3 才換成 LLM 評分的前幾名）
+# 每天推送幾篇（P2 先隨機取樣，P3 才換成評分最高的前幾名）
 daily_limit = 10
 
 [TRANSLATE]
@@ -41,5 +42,5 @@ daily_limit = 10
 enabled = false
 model = qwen3.5:9b
 url = http://127.0.0.1:11434
-# 單篇翻譯最多等幾秒；用 CPU 跑 9B 模型每篇約 45 秒
+# 單篇翻譯最多等幾秒；用 CPU 跑 9B 模型每篇約 45～65 秒
 timeout = 300

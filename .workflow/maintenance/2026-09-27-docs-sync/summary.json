@@ -1,0 +1,38 @@
+{
+  "executedAt": "2026-09-27T12:00:41.784Z",
+  "passed": true,
+  "tests": 70,
+  "requiredIds": [
+    "R1",
+    "R2",
+    "R3",
+    "R4",
+    "R5",
+    "R6",
+    "R7",
+    "R8",
+    "R9",
+    "D1",
+    "D2"
+  ],
+  "executedIds": [
+    "D1",
+    "D2",
+    "R1",
+    "R2",
+    "R3",
+    "R4",
+    "R5",
+    "R6",
+    "R7",
+    "R8",
+    "R9"
+  ],
+  "specsValidated": {
+    "items": 3,
+    "passed": 3,
+    "failed": 0
+  },
+  "activeChanges": [],
+  "scope": "Offline validation after documentation sync; not a new feature archive receipt."
+}
