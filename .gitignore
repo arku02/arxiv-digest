@@ -19,3 +19,18 @@ Thumbs.db
 
 # --- 執行輸出 ---
 *.log
+
+# Local integration tools
+node_modules/
+.workflow/lock
+.npm-cache/
+
+# 保留正式驗證及維護紀錄的原始輸出
+!.workflow/evidence/*.log
+!.workflow/maintenance/**/*.log
+
+# 本機備份與額外帳密設定
+_local-backups/
+.env
+.env.*
+!.env.example

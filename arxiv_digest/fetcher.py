@@ -34,6 +34,10 @@ _ID_PATTERN = re.compile(r"/abs/(?P<id>.+?)(?:v\d+)?$")
 _DATE_FORMAT = "%Y%m%d%H%M"
 
 
+class FetchLimitExceeded(RuntimeError):
+    """The requested window still contains papers beyond the configured cap."""
+
+
 @dataclass
 class Paper:
     """一篇論文。欄位對應資料庫的 papers 表。"""
@@ -83,7 +87,14 @@ class ArxivFetcher:
 
         Returns:
             論文列表，依提交時間由舊到新。
+
+        Raises:
+            FetchLimitExceeded: 已達上限且探查仍有資料；呼叫端不得推進成功起點。
         """
+        for name in ("page_size", "max_results"):
+            value = getattr(self.config, name)
+            if type(value) is not int or value <= 0:
+                raise ValueError(f"{name} 必須是正整數")
         if since >= until:
             logger.info("查詢區間為空（since=%s >= until=%s），跳過", since, until)
             return []
@@ -115,11 +126,16 @@ class ArxivFetcher:
             start += len(page)
 
         if len(papers) >= self.config.max_results:
-            logger.warning(
-                "已達單次上限 %d 筆，可能還有未抓完的論文；"
-                "下次執行會從本次區間終點繼續",
-                self.config.max_results,
-            )
+            # One extra record distinguishes an exact fit from truncation. Keep the
+            # same query, ordering, throttle and retry policy; never save the probe.
+            probe = self._parse(self._request(query, start=len(papers), page_size=1))
+            if probe:
+                raise FetchLimitExceeded(
+                    f"已達單次上限 {self.config.max_results} 筆，區間尚未抓完；"
+                    f"查詢區間 UTC {since:%Y-%m-%d %H:%M} ~ {until:%Y-%m-%d %H:%M}。"
+                    "本批次未寫入，續抓起點保留。請調高 max_results 後重跑；"
+                    "系統不會自動調高上限。"
+                )
 
         return papers
 

@@ -44,13 +44,13 @@ def run_fetch(config: Config, since: datetime | None = None) -> int:
         store.init_schema()
 
         if since is None:
-            last_end = store.last_success_window_end()
-            if last_end is None:
+            resume_start = store.next_fetch_start()
+            if resume_start is None:
                 days = config.arxiv.initial_backfill_days
                 since = until - timedelta(days=days)
                 logger.info("首次執行，回溯 %d 天", days)
             else:
-                since = last_end
+                since = resume_start
                 logger.info("從上次斷點接續：%s", since)
 
         gap = until - since

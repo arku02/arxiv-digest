@@ -1,0 +1,5 @@
+schema: integrated
+context: |
+  Existing Python arxiv-digest project; inspect README.md and PROJECT-RULES.md.
+  Offline validation only. No live API, MySQL, credentials or Telegram operations.
+  Use python-unittest with tests/test_fetch_checkpoint.py.

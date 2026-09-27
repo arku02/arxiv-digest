@@ -1,0 +1,22 @@
+test_R1_empty_time_range_makes_no_request (workflow_test_0.CheckpointTests.test_R1_empty_time_range_makes_no_request) ... ok
+test_R1_no_results_is_success (workflow_test_0.CheckpointTests.test_R1_no_results_is_success) ... ok
+test_R1_under_limit_is_success (workflow_test_0.CheckpointTests.test_R1_under_limit_is_success) ... ok
+test_R2_exact_limit_probes_and_completes (workflow_test_0.CheckpointTests.test_R2_exact_limit_probes_and_completes) ... ok
+test_R2_invalid_limits_fail_before_http (workflow_test_0.CheckpointTests.test_R2_invalid_limits_fail_before_http) ... ok
+test_R2_over_limit_is_not_success_and_does_not_save_partial_batch (workflow_test_0.CheckpointTests.test_R2_over_limit_is_not_success_and_does_not_save_partial_batch) ... 抓取失敗，這段區間會在下次執行時重抓：已達單次上限 4 筆，區間尚未抓完；查詢區間 UTC 2026-09-01 00:00 ~ 2026-09-02 00:00。本批次未寫入，續抓起點保留。請調高 max_results 後重跑；系統不會自動調高上限。
+ok
+test_R2_probe_failure_is_not_success (workflow_test_0.CheckpointTests.test_R2_probe_failure_is_not_success) ... 抓取失敗，這段區間會在下次執行時重抓：probe unavailable
+ok
+test_R3_covered_failure_is_retired (workflow_test_0.CheckpointTests.test_R3_covered_failure_is_retired) ... ok
+test_R3_first_failed_attempt_keeps_start_on_later_day (workflow_test_0.CheckpointTests.test_R3_first_failed_attempt_keeps_start_on_later_day) ... 抓取失敗，這段區間會在下次執行時重抓：已達單次上限 4 筆，區間尚未抓完；查詢區間 UTC 2026-09-01 00:00 ~ 2026-09-02 00:00。本批次未寫入，續抓起點保留。請調高 max_results 後重跑；系統不會自動調高上限。
+ok
+test_R3_older_failed_backfill_is_not_hidden_by_recent_success (workflow_test_0.CheckpointTests.test_R3_older_failed_backfill_is_not_hidden_by_recent_success) ... ok
+test_R3_repeated_complete_fetch_remains_deduplicated (workflow_test_0.CheckpointTests.test_R3_repeated_complete_fetch_remains_deduplicated) ... ok
+test_R3_retry_from_previous_success_keeps_window (workflow_test_0.CheckpointTests.test_R3_retry_from_previous_success_keeps_window) ... ok
+test_R3_running_attempt_is_retried (workflow_test_0.CheckpointTests.test_R3_running_attempt_is_retried) ... ok
+test_R4_cli_returns_failure_with_actionable_message (workflow_test_0.CheckpointTests.test_R4_cli_returns_failure_with_actionable_message) ... ok
+
+----------------------------------------------------------------------
+Ran 14 tests in 0.041s
+
+OK

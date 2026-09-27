@@ -1,0 +1,2 @@
+# Preserve exact bytes of verification records and their stored hashes.
+.workflow/** -text

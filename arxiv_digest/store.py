@@ -216,6 +216,32 @@ class Store:
             row = cursor.fetchone()
         return row["window_end"] if row else None
 
+    def next_fetch_start(self) -> datetime | None:
+        """選最早待補起點，包含首次失敗與尚未完成的舊區間。
+
+        只有較晚執行且完整涵蓋舊區間的成功紀錄，才解除該次重試需求。
+        不刪改失敗紀錄，保留排錯資訊。此策略假設單一抓取工作執行。
+        """
+        latest = self.last_success_window_end()
+        with self._require_db().cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT MIN(r.window_start) AS window_start
+                FROM runs AS r
+                WHERE r.status IN ('failed', 'running')
+                  AND NOT EXISTS (
+                      SELECT 1 FROM runs AS s
+                      WHERE s.status = 'success'
+                        AND s.id > r.id
+                        AND s.window_start <= r.window_start
+                        AND s.window_end >= r.window_end
+                  )
+                """
+            )
+            pending = cursor.fetchone()["window_start"]
+        candidates = [value for value in (latest, pending) if value is not None]
+        return min(candidates) if candidates else None
+
     def start_run(self, window_start: datetime, window_end: datetime) -> int:
         """記錄一次執行的開始，回傳 run_id。"""
         db = self._require_db()

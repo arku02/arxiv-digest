@@ -1,0 +1,16 @@
+{
+  "name": "integrated-project",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "scripts": {
+    "workflow": "node scripts/workflow.mjs",
+    "test": "node scripts/run-tests.mjs"
+  },
+  "devDependencies": {
+    "@fission-ai/openspec": "1.13.1"
+  }
+}

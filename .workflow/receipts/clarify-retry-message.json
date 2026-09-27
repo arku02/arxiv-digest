@@ -1,0 +1,41 @@
+{
+  "change": "clarify-retry-message",
+  "archivedAt": "2026-09-18T08:20:15.031Z",
+  "archive": "openspec/changes/archive/2026-09-18-clarify-retry-message",
+  "verifiedDigest": "88324c7b3b7bc5b41d27b6edbde07bef0d0013ff3ce2c19a7b29681d1017115b",
+  "specs": {
+    "openspec/specs/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "openspec/specs/fetch-checkpoint/spec.md": "bf0ad57fd52409a1fd2f03a2033e69bbe32de18341226e881c949a61f41c0720"
+  },
+  "validation": {
+    "items": [
+      {
+        "id": "fetch-checkpoint",
+        "type": "spec",
+        "valid": true,
+        "issues": [],
+        "durationMs": 20
+      }
+    ],
+    "summary": {
+      "totals": {
+        "items": 1,
+        "passed": 1,
+        "failed": 0
+      },
+      "byType": {
+        "spec": {
+          "items": 1,
+          "passed": 1,
+          "failed": 0
+        }
+      }
+    },
+    "version": "1.0",
+    "root": {
+      "path": "<TRIAL_COPY_ROOT>",
+      "source": "nearest"
+    }
+  },
+  "output": "{\n  \"archive\": {\n    \"change\": \"clarify-retry-message\",\n    \"archivedAs\": \"2026-09-18-clarify-retry-message\",\n    \"path\": \"<TRIAL_COPY_ROOT>\\\\openspec\\\\changes\\\\archive\\\\2026-09-18-clarify-retry-message\",\n    \"specsUpdated\": true,\n    \"totals\": {\n      \"added\": 0,\n      \"modified\": 1,\n      \"removed\": 0,\n      \"renamed\": 0\n    }\n  },\n  \"root\": {\n    \"path\": \"<TRIAL_COPY_ROOT>\",\n    \"source\": \"nearest\"\n  }\n}\n"
+}

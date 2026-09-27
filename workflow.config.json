@@ -1,0 +1,9 @@
+{
+  "schema": "integrated",
+  "openspecVersion": "1.13.1",
+  "testRunner": "python-unittest",
+  "pythonExecutable": "python",
+  "testFiles": [
+    "tests/test_fetch_checkpoint.py"
+  ]
+}

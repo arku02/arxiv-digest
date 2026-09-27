@@ -1,0 +1,11 @@
+{
+  "change": "fix-fetch-checkpoint",
+  "archivedAt": "2026-09-18T08:15:47.022Z",
+  "archive": "openspec/changes/archive/2026-09-18-fix-fetch-checkpoint",
+  "verifiedDigest": "a14fd312d93986bcfc4469a503abc708192bb0480dbf2dc827c253d192fa766f",
+  "specs": {
+    "openspec/specs/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "openspec/specs/fetch-checkpoint/spec.md": "dd8858de7e35d887a1b72ce25959aba4509e310126b3dff2d44bf1ac773ca742"
+  },
+  "output": "{\n  \"archive\": {\n    \"change\": \"fix-fetch-checkpoint\",\n    \"archivedAs\": \"2026-09-18-fix-fetch-checkpoint\",\n    \"path\": \"<TRIAL_COPY_ROOT>\\\\openspec\\\\changes\\\\archive\\\\2026-09-18-fix-fetch-checkpoint\",\n    \"specsUpdated\": true,\n    \"totals\": {\n      \"added\": 4,\n      \"modified\": 0,\n      \"removed\": 0,\n      \"renamed\": 0\n    },\n    \"warnings\": [\n      \"fetch-checkpoint - carried Purpose is under 50 characters; openspec validate --strict reports it as too brief.\"\n    ]\n  },\n  \"root\": {\n    \"path\": \"<TRIAL_COPY_ROOT>\",\n    \"source\": \"nearest\"\n  }\n}\n"
+}

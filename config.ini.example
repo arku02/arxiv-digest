@@ -20,3 +20,11 @@ max_results = 1000
 request_delay = 3.0
 # 從未執行過時，第一次要回溯幾天
 initial_backfill_days = 1
+
+[TELEGRAM]
+# 跟 @BotFather 對話 /newbot 之後拿到的 token
+bot_token = YOUR_BOT_TOKEN_HERE
+# 你自己的數字 ID，跟 @userinfobot 對話就會回給你
+chat_id = YOUR_CHAT_ID_HERE
+# 每天推送幾篇（P2 先隨機取樣，P3 才換成 LLM 評分的前幾名）
+daily_limit = 15

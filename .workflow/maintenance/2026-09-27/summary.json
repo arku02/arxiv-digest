@@ -1,0 +1,17 @@
+{
+  "executedAt": "2026-09-27T14:12:31.309316",
+  "passed": true,
+  "tests": 14,
+  "requiredIds": [
+    "R1",
+    "R2",
+    "R3",
+    "R4"
+  ],
+  "protectedFilesUnchanged": 52,
+  "historicalRecordsPreserved": true,
+  "brokenLinks": [],
+  "activeChanges": [],
+  "configIgnored": true,
+  "scope": "Offline maintenance validation; not a new feature archive receipt."
+}

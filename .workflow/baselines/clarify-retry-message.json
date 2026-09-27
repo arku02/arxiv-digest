@@ -1,0 +1,8 @@
+{
+  "change": "clarify-retry-message",
+  "capturedAt": "2026-09-18T08:16:53.806Z",
+  "specs": {
+    "openspec/specs/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "openspec/specs/fetch-checkpoint/spec.md": "e05826d59e19bd561e21781e4c95a6105b1f1e43d29f76ebfe8f994ecc4b15ca"
+  }
+}
