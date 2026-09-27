@@ -29,6 +29,7 @@ from arxiv_digest.config import Config, load_config
 from arxiv_digest.fetcher import ArxivFetcher
 from arxiv_digest.notifier import TelegramClient, format_message, keyboard
 from arxiv_digest.store import Store
+from arxiv_digest.translator import OllamaTranslator
 
 logger = logging.getLogger("arxiv_digest")
 
@@ -110,6 +111,7 @@ def run_push(
     limit = config.telegram.limit()
     if not dry_run:
         token, chat_id = config.telegram.credentials()
+    translate = config.translate.validated()
     rng = rng or random.Random()
     pause = sleep or time.sleep
 
@@ -126,11 +128,25 @@ def run_push(
         papers = store.papers_for_push(chosen)
         logger.info("候選 %d 篇，抽出 %d 篇", len(pool), len(papers))
 
+        translator = OllamaTranslator(*translate) if translate else None
+
+        def render(paper) -> str:
+            # 翻譯失敗就改推英文；第一次失敗後本批不再翻譯，避免逐篇等逾時
+            nonlocal translator
+            translation = None
+            if translator is not None:
+                try:
+                    translation = translator.translate(paper.title, paper.summary)
+                except Exception as exc:
+                    translator = None
+                    logger.warning("翻譯失敗，本批其餘論文改推英文：%s", exc)
+            return format_message(paper, translation)
+
         if dry_run:
             print(f"候選 {len(pool)} 篇，抽出 {len(papers)} 篇（預覽，未發送、未記錄）\n")
             buttons = " | ".join(text for text, _ in notifier.BUTTONS)
             for paper in papers:
-                print(format_message(paper))
+                print(render(paper))
                 print(f"[{buttons}]")
                 print("-" * 40)
             return 0
@@ -142,7 +158,7 @@ def run_push(
             for index, paper in enumerate(papers):
                 if index:
                     pause(notifier.SEND_INTERVAL)
-                message_id = client.send(format_message(paper), keyboard(paper.id))
+                message_id = client.send(render(paper), keyboard(paper.id))
                 store.record_push(batch_id, paper.id, chat_id, message_id)
                 sent += 1
         except Exception as exc:

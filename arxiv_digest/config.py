@@ -77,10 +77,36 @@ class TelegramConfig:
 
 
 @dataclass(frozen=True)
+class TranslateConfig:
+    """推送翻譯設定。保存原始字串，push 時才驗證，填錯不影響 daily。"""
+
+    enabled: str = "false"
+    model: str = "qwen3.5:9b"
+    url: str = "http://127.0.0.1:11434"
+    timeout: str = "300"
+
+    def validated(self) -> tuple[str, str, float] | None:
+        """關閉時回傳 None；開啟時回傳 (model, url, timeout 秒)。"""
+        flag = ConfigParser.BOOLEAN_STATES.get(self.enabled.strip().lower())
+        if flag is None:
+            raise ValueError("config.ini 的 [TRANSLATE] enabled 必須是 true 或 false")
+        if not flag:
+            return None
+        try:
+            timeout = float(self.timeout)
+        except ValueError:
+            timeout = 0
+        if not timeout > 0:
+            raise ValueError("config.ini 的 [TRANSLATE] timeout 必須是正數（秒）")
+        return self.model.strip(), self.url.strip().rstrip("/"), timeout
+
+
+@dataclass(frozen=True)
 class Config:
     db: DBConfig
     arxiv: ArxivConfig
     telegram: TelegramConfig = TelegramConfig()
+    translate: TranslateConfig = TranslateConfig()
 
 
 def load_config(path: Path | str | None = None) -> Config:
@@ -130,4 +156,11 @@ def load_config(path: Path | str | None = None) -> Config:
         daily_limit=parser.get("TELEGRAM", "daily_limit", fallback="10"),
     )
 
-    return Config(db=db, arxiv=arxiv, telegram=telegram)
+    translate = TranslateConfig(
+        enabled=parser.get("TRANSLATE", "enabled", fallback="false"),
+        model=parser.get("TRANSLATE", "model", fallback="qwen3.5:9b"),
+        url=parser.get("TRANSLATE", "url", fallback="http://127.0.0.1:11434"),
+        timeout=parser.get("TRANSLATE", "timeout", fallback="300"),
+    )
+
+    return Config(db=db, arxiv=arxiv, telegram=telegram, translate=translate)

@@ -11,6 +11,8 @@ from dataclasses import dataclass, field
 
 import requests
 
+from arxiv_digest.translator import Translation
+
 API_BASE = "https://api.telegram.org"
 
 # 同一個聊天室每秒最多約 1 則，超過會被限流
@@ -18,6 +20,8 @@ SEND_INTERVAL = 1.0
 
 # 摘要節錄長度；完整摘要常超過 1000 字，手機上太長
 SUMMARY_LIMIT = 300
+# 中文摘要通常 300～600 字；上限讓訊息保持在 Telegram 的 4096 字元內
+TRANSLATED_SUMMARY_LIMIT = 1500
 AUTHOR_LIMIT = 3
 
 BUTTONS = (("👎 沒興趣", 0), ("👍 有興趣", 1), ("⭐ 超想讀", 2))
@@ -47,24 +51,41 @@ def _clean(text: str | None) -> str:
     return " ".join((text or "").split())
 
 
-def format_message(paper: PushPaper) -> str:
-    """組出 HTML 格式的訊息內容。先截斷再跳脫，避免把 &amp; 之類切成兩半。"""
+def _clip(text: str, limit: int) -> str:
+    return text if len(text) <= limit else text[:limit].rstrip() + "…"
+
+
+def format_message(paper: PushPaper, translation: Translation | None = None) -> str:
+    """組出 HTML 格式的訊息內容。先截斷再跳脫，避免把 &amp; 之類切成兩半。
+
+    有翻譯時：中文標題、英文原標題、作者、分類、完整中文摘要；沒有時維持英文格式。
+    """
     authors = ", ".join(paper.authors[:AUTHOR_LIMIT])
     if len(paper.authors) > AUTHOR_LIMIT:
         authors += f" 等 {len(paper.authors)} 人"
 
-    summary = _clean(paper.summary)
-    if len(summary) > SUMMARY_LIMIT:
-        summary = summary[:SUMMARY_LIMIT].rstrip() + "…"
-
     categories = ", ".join(c.strip() for c in (paper.categories or "").split(",") if c.strip())
     link = f"https://arxiv.org/abs/{paper.arxiv_id}"
+    footer = f'<a href="{link}">arXiv:{html.escape(paper.arxiv_id)}</a>'
+
+    if translation is not None:
+        summary = _clip(_clean(translation.summary_zh), TRANSLATED_SUMMARY_LIMIT)
+        return (
+            f"<b>{html.escape(_clean(translation.title_zh))}</b>\n"
+            f"{html.escape(_clean(paper.title))}\n"
+            f"{html.escape(authors)}\n"
+            f"<i>{html.escape(categories)}</i>\n\n"
+            f"{html.escape(summary)}\n\n"
+            f"{footer}"
+        )
+
+    summary = _clip(_clean(paper.summary), SUMMARY_LIMIT)
     return (
         f"<b>{html.escape(_clean(paper.title))}</b>\n"
         f"{html.escape(authors)}\n"
         f"<i>{html.escape(categories)}</i>\n\n"
         f"{html.escape(summary)}\n\n"
-        f'<a href="{link}">arXiv:{html.escape(paper.arxiv_id)}</a>'
+        f"{footer}"
     )
 
 

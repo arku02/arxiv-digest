@@ -11,7 +11,7 @@ python -m pip install -r requirements.txt
 npm ci --ignore-scripts --no-audit --no-fund
 ```
 
-`workflow.config.json` 已登錄 `tests/test_fetch_checkpoint.py`、`tests/test_telegram_push.py` 與 `tests/test_feedback_collect.py`，不必替換成範例測試路徑。`pythonExecutable` 必須指向已安裝專案套件的 Python；移機或切換虛擬環境時才調整。
+`workflow.config.json` 已登錄 `tests/test_fetch_checkpoint.py`、`tests/test_telegram_push.py`、`tests/test_feedback_collect.py` 與 `tests/test_push_translation.py`，不必替換成範例測試路徑。`pythonExecutable` 必須指向已安裝專案套件的 Python；移機或切換虛擬環境時才調整。
 
 本手冊不會自動建立或修改 Windows 排程，日常使用及設定方式見 [README](README.md)。
 
@@ -21,7 +21,7 @@ npm ci --ignore-scripts --no-audit --no-fund
 npm test
 ```
 
-目前有 53 項功能測試，涵蓋完整抓取、達到上限、保留續抓起點、錯誤提示、公告延遲回看、Telegram 推送及回饋收集。測試使用模擬 Atom 回應、模擬 Bot API、固定時間及記憶體資料庫，不讀取 `config.ini`，不連線 arXiv、MySQL 或 Telegram。
+目前有 65 項功能測試，涵蓋完整抓取、達到上限、保留續抓起點、錯誤提示、公告延遲回看、Telegram 推送、回饋收集及中文翻譯。測試使用模擬 Atom 回應、模擬 Bot API、模擬 Ollama、固定時間及記憶體資料庫，不讀取 `config.ini`，不連線 arXiv、MySQL 或 Telegram。
 
 SQLite 只驗證查詢邏輯，不代表真實 MySQL 行為已驗證。測試通過也不代表正式排程或外部服務正常。
 

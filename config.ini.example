@@ -33,3 +33,13 @@ bot_token = YOUR_BOT_TOKEN_HERE
 chat_id = YOUR_CHAT_ID_HERE
 # 每天推送幾篇（P2 先隨機取樣，P3 才換成 LLM 評分的前幾名）
 daily_limit = 10
+
+[TRANSLATE]
+# 推送時用本機 Ollama 把標題與摘要翻成繁體中文（免費，不經過雲端）
+# 先安裝 Ollama（ollama.com）並下載模型：ollama pull qwen3.5:9b
+# 翻譯失敗或 Ollama 沒在執行時，會自動改推英文
+enabled = false
+model = qwen3.5:9b
+url = http://127.0.0.1:11434
+# 單篇翻譯最多等幾秒；用 CPU 跑 9B 模型每篇約 45 秒
+timeout = 300
