@@ -1,0 +1,8 @@
+{
+  "change": "fix-announce-lag",
+  "capturedAt": "2026-09-27T06:41:10.897Z",
+  "specs": {
+    "openspec/specs/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "openspec/specs/fetch-checkpoint/spec.md": "bf0ad57fd52409a1fd2f03a2033e69bbe32de18341226e881c949a61f41c0720"
+  }
+}

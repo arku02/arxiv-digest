@@ -21,7 +21,7 @@ npm ci --ignore-scripts --no-audit --no-fund
 npm test
 ```
 
-目前有 14 項功能測試，涵蓋完整抓取、達到上限、保留續抓起點及錯誤提示。測試使用模擬 Atom 回應、固定時間及記憶體資料庫，不讀取 `config.ini`，不連線 arXiv、MySQL 或 Telegram。
+目前有 22 項功能測試，涵蓋完整抓取、達到上限、保留續抓起點、錯誤提示及公告延遲回看。測試使用模擬 Atom 回應、固定時間及記憶體資料庫，不讀取 `config.ini`，不連線 arXiv、MySQL 或 Telegram。
 
 SQLite 只驗證查詢邏輯，不代表真實 MySQL 行為已驗證。測試通過也不代表正式排程或外部服務正常。
 

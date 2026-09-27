@@ -1,23 +1,4 @@
-# fetch-checkpoint Specification
-
-## Purpose
-確保每日論文抓取在筆數達到上限時能區分完整結果與尚未完成的區間，保存首次失敗及後續重試的最早起點，讓操作者能依照明確錯誤訊息調整上限並重新執行，而不把未取得的論文當成已處理。
-
-## Requirements
-
-### Requirement: R1 - Complete fetch
-系統 SHALL 在有效設定下，保留未達上限的分頁抓取、空結果成功與既有去重行為。空時間區間 SHALL 不發送請求。
-
-#### Scenario: Complete fetch acceptance
-- **WHEN** 取回筆數未達 max_results 或沒有結果
-- **THEN** 完整結果交由既有儲存流程處理，成功起點推進至區間終點
-
-### Requirement: R2 - Detect incomplete window
-系統 SHALL 在取回 max_results 筆後，以相同查詢在下一個 offset 探查最多一筆。若探查為空 SHALL 視為完整；若仍有論文或探查失敗 SHALL 失敗且不儲存這批部分結果，不標記該區間 success。page_size 或 max_results 非正整數 SHALL 在請求前拒絕。上限限制交付資料筆數，探查額外最多取得一筆，不入庫。
-
-#### Scenario: Detect incomplete window acceptance
-- **WHEN** 完整上限批次後的探查仍有一筆
-- **THEN** 這次執行失敗，原成功起點保留；空探查則允許完成
+## MODIFIED Requirements
 
 ### Requirement: R3 - Preserve retry start
 daily SHALL 從「最新成功終點往前 lookback_days 天」與尚未被後續成功區間完整覆蓋之 failed/running 區間起點中選最早值。failed/running 區間起點 SHALL 直接沿用，不再往前加 lookback_days。兩者皆不存在才使用 initial_backfill_days，首次回溯不另加 lookback_days。成功覆蓋 SHALL 具有較大的執行 id，且起點不晚於失敗起點、終點不早於失敗終點。首次失敗、未完成執行及較早 backfill 失敗 SHALL 可重新抓取；重試與回看的重複資料沿用 arxiv_id 去重。
@@ -30,16 +11,7 @@ daily SHALL 從「最新成功終點往前 lookback_days 天」與尚未被後�
 - **WHEN** 已有成功紀錄後，連續兩次 daily 都未完成，第三次才成功
 - **THEN** 三次執行的查詢起點相同，都是該成功終點往前 lookback_days 天
 
-### Requirement: R4 - Actionable failure
-未完成的 daily 指令 SHALL 回傳非零退出碼。錯誤 SHALL 說明起點保留、調高 max_results 後重跑、此次未完成查詢的起迄 UTC 時間（分鐘精度），以及系統不會自動調高上限。不得把上限中止描述為完整成功。
-
-#### Scenario: Actionable failure acceptance
-- **WHEN** 抓取超過上限
-- **THEN** 退出碼為 1 且錯誤包含起點保留及重跑方法
-
-#### Scenario: Operator can identify retry window
-- **WHEN** 2026-09-01 00:00 至 2026-09-02 00:00 UTC 的查詢超過上限
-- **THEN** 退出碼為 1，錯誤顯示上述 UTC 起訖時間、保留起點及調高 max_results 後重跑，並說明不會自動調高上限
+## ADDED Requirements
 
 ### Requirement: R5 - Announcement lag lookback
 arXiv API 在論文公告前查不到該論文。daily SHALL 依 R3 每次重新查詢最新成功終點前 lookback_days 天，使前次執行時尚未公告的論文在公告後的下一次 daily 入庫。lookback_days SHALL 預設為 4；設為 0 時起點與未回看時相同。lookback_days 不是非負整數時 SHALL 在連線資料庫與發送請求前拒絕。回看取回的既有論文 SHALL 以 arxiv_id 去重，新增筆數只計入新論文。backfill 指定天數時 SHALL 以指定起點查詢，不另加 lookback_days。

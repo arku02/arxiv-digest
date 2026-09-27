@@ -34,6 +34,14 @@ class ArxivConfig:
     max_results: int
     request_delay: float
     initial_backfill_days: int
+    # daily 每次往回重查幾天。arXiv 論文公告後 API 才查得到，
+    # 週五截止後的投稿要到週一晚上（ET）才公告，最長約 3 天多
+    lookback_days: int = 4
+
+    def __post_init__(self) -> None:
+        # bool 是 int 的子類別，要排除；在連線與請求前就擋下錯誤設定
+        if type(self.lookback_days) is not int or self.lookback_days < 0:
+            raise ValueError("config.ini 的 [ARXIV] lookback_days 必須是非負整數")
 
 
 @dataclass(frozen=True)
@@ -80,6 +88,7 @@ def load_config(path: Path | str | None = None) -> Config:
         max_results=parser.getint("ARXIV", "max_results", fallback=1000),
         request_delay=parser.getfloat("ARXIV", "request_delay", fallback=3.0),
         initial_backfill_days=parser.getint("ARXIV", "initial_backfill_days", fallback=1),
+        lookback_days=parser.getint("ARXIV", "lookback_days", fallback=4),
     )
 
     return Config(db=db, arxiv=arxiv)

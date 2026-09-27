@@ -6,7 +6,8 @@
     python -m arxiv_digest status           看最近的執行紀錄
 
 排程只要固定跑 daily 就好。它會自己從「上次成功執行涵蓋到的時間點」接續，
-所以筆電關機好幾天再開，中間的論文一樣補得回來。
+所以筆電關機好幾天再開，中間的論文一樣補得回來。接續時會再往回重查
+lookback_days 天，因為 arXiv 論文要公告後才查得到，上次執行時可能還看不到。
 """
 
 from __future__ import annotations
@@ -44,14 +45,19 @@ def run_fetch(config: Config, since: datetime | None = None) -> int:
         store.init_schema()
 
         if since is None:
-            resume_start = store.next_fetch_start()
+            resume_start = store.next_fetch_start(
+                timedelta(days=config.arxiv.lookback_days)
+            )
             if resume_start is None:
                 days = config.arxiv.initial_backfill_days
                 since = until - timedelta(days=days)
                 logger.info("首次執行，回溯 %d 天", days)
             else:
                 since = resume_start
-                logger.info("從上次斷點接續：%s", since)
+                logger.info(
+                    "從上次斷點接續（含回看 %d 天）：%s",
+                    config.arxiv.lookback_days, since,
+                )
 
         gap = until - since
         logger.info(

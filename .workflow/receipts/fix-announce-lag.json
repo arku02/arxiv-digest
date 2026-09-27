@@ -1,0 +1,41 @@
+{
+  "change": "fix-announce-lag",
+  "archivedAt": "2026-09-27T06:46:48.698Z",
+  "archive": "openspec/changes/archive/2026-09-27-fix-announce-lag",
+  "verifiedDigest": "817adda12ae1292040b16ba56d8c1ac58f90d201d853e4770238a3d18b1ada9d",
+  "specs": {
+    "openspec/specs/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "openspec/specs/fetch-checkpoint/spec.md": "878e9a3f9b6bbe86822065c997092a37a1865dc715af1724722efcf6d2a22e17"
+  },
+  "validation": {
+    "items": [
+      {
+        "id": "fetch-checkpoint",
+        "type": "spec",
+        "valid": true,
+        "issues": [],
+        "durationMs": 5
+      }
+    ],
+    "summary": {
+      "totals": {
+        "items": 1,
+        "passed": 1,
+        "failed": 0
+      },
+      "byType": {
+        "spec": {
+          "items": 1,
+          "passed": 1,
+          "failed": 0
+        }
+      }
+    },
+    "version": "1.0",
+    "root": {
+      "path": "<PROJECT_ROOT>",
+      "source": "nearest"
+    }
+  },
+  "output": "{\n  \"archive\": {\n    \"change\": \"fix-announce-lag\",\n    \"archivedAs\": \"2026-09-27-fix-announce-lag\",\n    \"path\": \"<PROJECT_ROOT>\\\\openspec\\\\changes\\\\archive\\\\2026-09-27-fix-announce-lag\",\n    \"specsUpdated\": true,\n    \"totals\": {\n      \"added\": 1,\n      \"modified\": 1,\n      \"removed\": 0,\n      \"renamed\": 0\n    }\n  },\n  \"root\": {\n    \"path\": \"<PROJECT_ROOT>\",\n    \"source\": \"nearest\"\n  }\n}\n"
+}

@@ -13,7 +13,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import pymysql
 from pymysql.connections import Connection
@@ -216,13 +216,17 @@ class Store:
             row = cursor.fetchone()
         return row["window_end"] if row else None
 
-    def next_fetch_start(self) -> datetime | None:
+    def next_fetch_start(self, lookback: timedelta = timedelta(0)) -> datetime | None:
         """選最早待補起點，包含首次失敗與尚未完成的舊區間。
 
+        成功終點往前 lookback 重查，補上當時尚未公告的論文。失敗區間起點
+        已含當次回看，直接沿用；再減一次會讓連續失敗的起點不斷往前漂移。
         只有較晚執行且完整涵蓋舊區間的成功紀錄，才解除該次重試需求。
         不刪改失敗紀錄，保留排錯資訊。此策略假設單一抓取工作執行。
         """
         latest = self.last_success_window_end()
+        if latest is not None:
+            latest -= lookback
         with self._require_db().cursor() as cursor:
             cursor.execute(
                 """
