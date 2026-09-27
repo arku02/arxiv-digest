@@ -29,6 +29,7 @@ lookback_days = 4
 # 跟 @BotFather 對話 /newbot 之後拿到的 token
 bot_token = YOUR_BOT_TOKEN_HERE
 # 你自己的數字 ID，跟 @userinfobot 對話就會回給你
+# 填好後要先在 Telegram 對自己的 bot 按一次 Start，bot 才能傳訊息給你
 chat_id = YOUR_CHAT_ID_HERE
 # 每天推送幾篇（P2 先隨機取樣，P3 才換成 LLM 評分的前幾名）
-daily_limit = 15
+daily_limit = 10

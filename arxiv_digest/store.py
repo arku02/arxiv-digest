@@ -20,6 +20,7 @@ from pymysql.connections import Connection
 
 from arxiv_digest.config import DBConfig
 from arxiv_digest.fetcher import Paper
+from arxiv_digest.notifier import PushPaper
 
 logger = logging.getLogger(__name__)
 
@@ -83,6 +84,32 @@ SCHEMA_STATEMENTS = [
         INDEX idx_status (status, window_end)
     ) CHARACTER SET utf8mb4
     """,
+    """
+    CREATE TABLE IF NOT EXISTS push_batches(
+        id          INT AUTO_INCREMENT PRIMARY KEY,
+        started_at  DATETIME NOT NULL,           -- 資料庫時間，與 papers.created_at 同一時鐘
+        pool_size   INT NOT NULL,                -- 候選篇數，之後可還原抽中機率
+        sent        INT DEFAULT 0,
+        status      VARCHAR(20) NOT NULL,        -- running / success / failed
+        error       VARCHAR(500),
+        finished_at TIMESTAMP NULL,
+        INDEX idx_status (status, started_at)
+    ) CHARACTER SET utf8mb4
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS pushes(
+        id         INT AUTO_INCREMENT PRIMARY KEY,
+        batch_id   INT NOT NULL,
+        paper_id   INT NOT NULL,
+        chat_id    VARCHAR(64) NOT NULL,
+        message_id BIGINT NOT NULL,              -- 收集回饋時用來對回這則訊息
+        pushed_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (batch_id) REFERENCES push_batches(id),
+        FOREIGN KEY (paper_id) REFERENCES papers(id) ON DELETE CASCADE,
+        UNIQUE KEY uniq_paper (paper_id),        -- 同一篇只推一次
+        INDEX idx_message (chat_id, message_id)
+    ) CHARACTER SET utf8mb4
+    """,
 ]
 
 
@@ -141,7 +168,7 @@ class Store:
                 cursor.execute(statement)
         db.commit()
         # 每個指令都會呼叫這個方法，用 info 會讓 daily / status 的輸出多一行雜訊
-        logger.debug("資料表建立完成：papers / authors / scores / feedback / runs")
+        logger.debug("資料表建立完成：papers / authors / scores / feedback / runs / push_batches / pushes")
 
     # ---------------- 論文寫入 ----------------
 
@@ -298,6 +325,110 @@ class Store:
                 (limit,),
             )
             return list(cursor.fetchall())
+
+    # ---------------- 推送紀錄 ----------------
+
+    def db_now(self) -> datetime:
+        """資料庫目前時間。papers.created_at 用的是資料庫時鐘，推送區間要跟它比。"""
+        with self._require_db().cursor() as cursor:
+            cursor.execute("SELECT CURRENT_TIMESTAMP AS now")
+            return cursor.fetchone()["now"]
+
+    def last_success_push_start(self) -> datetime | None:
+        """最近一次成功推送批次的起點；失敗或中斷的批次不算。"""
+        with self._require_db().cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT MAX(started_at) AS started_at
+                FROM push_batches
+                WHERE status = 'success'
+                """
+            )
+            return cursor.fetchone()["started_at"]
+
+    def push_pool(self, after: datetime, until: datetime) -> list[int]:
+        """(after, until] 之間入庫、且從未推送過的論文 id，由小到大。"""
+        with self._require_db().cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT p.id
+                FROM papers AS p
+                WHERE p.created_at > %s
+                  AND p.created_at <= %s
+                  AND NOT EXISTS (SELECT 1 FROM pushes AS s WHERE s.paper_id = p.id)
+                ORDER BY p.id
+                """,
+                (after, until),
+            )
+            return [row["id"] for row in cursor.fetchall()]
+
+    def papers_for_push(self, paper_ids: list[int]) -> list[PushPaper]:
+        """讀出推送需要的欄位與作者（依作者寫入順序），回傳順序同 paper_ids。"""
+        if not paper_ids:
+            return []
+        marks = ", ".join(["%s"] * len(paper_ids))
+        with self._require_db().cursor() as cursor:
+            cursor.execute(
+                f"""
+                SELECT id, arxiv_id, title, summary, categories
+                FROM papers WHERE id IN ({marks})
+                """,
+                tuple(paper_ids),
+            )
+            papers = {row["id"]: PushPaper(**row) for row in cursor.fetchall()}
+            cursor.execute(
+                f"""
+                SELECT paper_id, name FROM authors
+                WHERE paper_id IN ({marks})
+                ORDER BY id
+                """,
+                tuple(paper_ids),
+            )
+            for row in cursor.fetchall():
+                papers[row["paper_id"]].authors.append(row["name"])
+        return [papers[paper_id] for paper_id in paper_ids]
+
+    def start_push_batch(self, started_at: datetime, pool_size: int) -> int:
+        db = self._require_db()
+        with db.cursor() as cursor:
+            cursor.execute(
+                """
+                INSERT INTO push_batches (started_at, pool_size, status)
+                VALUES (%s, %s, 'running')
+                """,
+                (started_at, pool_size),
+            )
+            batch_id = cursor.lastrowid
+        db.commit()
+        return batch_id
+
+    def record_push(self, batch_id: int, paper_id: int, chat_id: str, message_id: int) -> None:
+        """每送出一則就立刻 commit，中途失敗時已送出的不會重送。"""
+        db = self._require_db()
+        with db.cursor() as cursor:
+            cursor.execute(
+                """
+                INSERT INTO pushes (batch_id, paper_id, chat_id, message_id)
+                VALUES (%s, %s, %s, %s)
+                """,
+                (batch_id, paper_id, chat_id, message_id),
+            )
+        db.commit()
+
+    def finish_push_batch(
+        self, batch_id: int, status: str, sent: int, error: str | None = None
+    ) -> None:
+        db = self._require_db()
+        with db.cursor() as cursor:
+            cursor.execute(
+                """
+                UPDATE push_batches
+                SET status = %s, sent = %s, error = %s, finished_at = CURRENT_TIMESTAMP
+                WHERE id = %s
+                """,
+                (status, sent, error[:500] if error else None, batch_id),
+            )
+        db.commit()
 
     def count_papers(self) -> int:
         """目前資料庫裡有幾篇論文。"""

@@ -11,7 +11,7 @@
 |---|---|---|
 | P0 | 專案骨架、資料庫 schema | 已實作 |
 | P1 | 每日抓取（增量、去重、限速、斷點續傳、公告延遲回看） | 已實作；22 項離線測試，驗證邊界見下方 |
-| P2 | 推送管線 + 回饋收集 | ⬜ 未開始 |
+| P2 | 推送管線 + 回饋收集 | 推送已實作（16 項離線測試；2026-09-27 實機推送 10 篇成功）；回饋收集未開始 |
 | P3 | LLM 興趣評分，只推 top N | ⬜ 未開始 |
 | P4 | 向量粗篩降低成本、用回饋資料做個人化 | ⬜ 未開始 |
 
@@ -65,6 +65,8 @@ python -m arxiv_digest init-db            # 建立資料庫與資料表
 python -m arxiv_digest daily              # 抓取上次執行至今的新論文
 python -m arxiv_digest backfill --days 7  # 回頭補抓過去 7 天
 python -m arxiv_digest status             # 看最近的執行紀錄
+python -m arxiv_digest push --dry-run     # 預覽今天要推送的論文，不發送
+python -m arxiv_digest push               # 推送到 Telegram
 ```
 
 排程只要固定跑 `daily`。它從 `runs` 表裡「上次成功執行涵蓋到的時間點」往前 `lookback_days` 天（預設 4）接續，
@@ -96,6 +98,22 @@ python -m arxiv_digest backfill --days 10
 
 此修正不會自動找回以前已被誤標 success 的漏抓資料；需要另外指定 backfill 範圍。仍假設單一排程，沒有索引快照或所有資料庫寫入錯誤的完整性保證。
 
+### Telegram 推送
+
+`push` 從「上次成功推送之後新入庫、而且沒推過」的論文中，隨機抽 `daily_limit` 篇（預設 10），每篇發一則訊息，附 👎 沒興趣／👍 有興趣／⭐ 超想讀 三個按鈕。第一次推送的候選是過去 24 小時入庫的論文。
+
+刻意用隨機抽樣而不是挑選：P3 要拿這些回饋評估 LLM 評分準不準，先篩過的資料會帶偏差。每批的候選篇數記在 `push_batches.pool_size`，之後可以還原每篇被抽中的機率。
+
+設定步驟：
+
+1. 在 Telegram 對 @BotFather 輸入 `/newbot`，取得 bot token
+2. 對 @userinfobot 傳任意訊息，取得自己的數字 ID
+3. 對自己的新 bot 按 Start（沒按會收到 403）
+4. 填入 `config.ini` 的 `[TELEGRAM]`，先跑 `push --dry-run` 看內容，再跑 `push`
+
+推送到一半失敗時，已送出的會保留，本批記為失敗，下次 `push` 從剩下的候選重新抽。錯誤訊息會把 bot token 換成 `<bot_token>`。
+按鈕回饋目前還不會被收集，由下一個變更 add-feedback-collect 處理；Telegram 只保留 24 小時內未讀取的按鈕點擊。
+
 ### 離線驗證與變更流程
 
 本專案使用 [整合工作流程](WORKFLOW-GUIDE.md)，規則見 [PROJECT-RULES.md](PROJECT-RULES.md)。OpenSpec 管理規格；Python unittest 驗證功能。
@@ -121,13 +139,16 @@ workflow.config.json 的 pythonExecutable 指向實際 Python；移到其他電�
 
 「開始位置」不能省略，否則找不到 `config.ini`。
 
+要推送的話，在同一個工作的「動作」頁再新增一個動作，程式與開始位置相同、引數填 `-m arxiv_digest push`。多個動作會依序執行，推送會在抓取之後。
+arXiv 約在台灣時間早上 8 點公告，排程設在 8 點半之後，當天新論文才會進候選。
+
 「程式或指令碼」填的是實際要用的 Python 路徑：請填入本機實際路徑，
 若改用虛擬環境則換成 `<專案目錄>\.venv\Scripts\python.exe`。
 用 `python -c "import sys; print(sys.executable)"` 可以查到目前用的是哪一個。
 
 ## 資料庫結構
 
-`init-db`（以及每次 `daily`）會自動建立下列五張表：
+`init-db`（以及每次 `daily`、`push`）會自動建立下列七張表：
 
 | 資料表 | 用途 | 備註 |
 |---|---|---|
@@ -136,6 +157,8 @@ workflow.config.json 的 pythonExecutable 指向實際 Python；移到其他電�
 | `scores` | LLM 評分結果 | P3 開始使用 |
 | `feedback` | 你的「有興趣 / 沒興趣」 | 未來個人化模型的訓練資料 |
 | `runs` | 每次執行涵蓋的時間區間 | 斷點續傳靠這張表 |
+| `push_batches` | 每次推送的批次 | 候選篇數、送出篇數、成功／失敗 |
+| `pushes` | 每篇推送紀錄 | `paper_id` UNIQUE，保存 Telegram message_id |
 
 去重用 `arxiv_id` 而不是網址，是因為論文從 `v1` 改版到 `v2` 時網址會變，
 用網址當唯一鍵會讓同一篇論文重複入庫。
@@ -154,12 +177,12 @@ workflow.config.json 的 pythonExecutable 指向實際 Python；移到其他電�
 arxiv_digest/
 ├── config.py     設定讀取
 ├── fetcher.py    arXiv API：增量查詢、分頁、限速、重試
-├── store.py      MySQL：建表、去重寫入、執行紀錄
+├── store.py      MySQL：建表、去重寫入、執行與推送紀錄
+├── notifier.py   Telegram：訊息格式、回饋按鈕、Bot API
 └── cli.py        命令列進入點
 ```
 
-`scorer.py`（LLM 評分）與 `notifier.py`（推送）等 P2/P3 開始時再建，
-現在不放空檔案佔位。
+`scorer.py`（LLM 評分）等 P3 開始時再建，現在不放空檔案佔位。
 
 ## 備註
 

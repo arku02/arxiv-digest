@@ -13,6 +13,9 @@ from pathlib import Path
 # 專案根目錄下的 config.ini（arxiv_digest/ 的上一層）
 DEFAULT_CONFIG_PATH = Path(__file__).resolve().parent.parent / "config.ini"
 
+# config.ini.example 的範例值開頭，例如 YOUR_BOT_TOKEN_HERE
+PLACEHOLDER_PREFIX = "YOUR_"
+
 
 @dataclass(frozen=True)
 class DBConfig:
@@ -45,9 +48,39 @@ class ArxivConfig:
 
 
 @dataclass(frozen=True)
+class TelegramConfig:
+    """推送設定。保存原始字串，push 時才驗證，缺少或填錯不影響 daily。"""
+
+    bot_token: str = ""
+    chat_id: str = ""
+    daily_limit: str = "10"
+
+    def limit(self) -> int:
+        """每天推送篇數，必須是正整數。"""
+        try:
+            value = int(self.daily_limit)
+        except ValueError:
+            value = 0
+        if value <= 0:
+            raise ValueError("config.ini 的 [TELEGRAM] daily_limit 必須是正整數")
+        return value
+
+    def credentials(self) -> tuple[str, str]:
+        """回傳 (bot_token, chat_id)；還沒填或仍是範例值時提示去 config.ini 填。"""
+        values = (self.bot_token.strip(), self.chat_id.strip())
+        if any(not v or v.startswith(PLACEHOLDER_PREFIX) for v in values):
+            raise ValueError(
+                "尚未設定 Telegram：請在 config.ini 的 [TELEGRAM] 填入 bot_token 與 chat_id"
+                "（取得方式見 config.ini.example）。只想預覽可用 push --dry-run"
+            )
+        return values
+
+
+@dataclass(frozen=True)
 class Config:
     db: DBConfig
     arxiv: ArxivConfig
+    telegram: TelegramConfig = TelegramConfig()
 
 
 def load_config(path: Path | str | None = None) -> Config:
@@ -91,4 +124,10 @@ def load_config(path: Path | str | None = None) -> Config:
         lookback_days=parser.getint("ARXIV", "lookback_days", fallback=4),
     )
 
-    return Config(db=db, arxiv=arxiv)
+    telegram = TelegramConfig(
+        bot_token=parser.get("TELEGRAM", "bot_token", fallback=""),
+        chat_id=parser.get("TELEGRAM", "chat_id", fallback=""),
+        daily_limit=parser.get("TELEGRAM", "daily_limit", fallback="10"),
+    )
+
+    return Config(db=db, arxiv=arxiv, telegram=telegram)

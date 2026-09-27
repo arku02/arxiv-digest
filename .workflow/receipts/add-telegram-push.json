@@ -1,0 +1,49 @@
+{
+  "change": "add-telegram-push",
+  "archivedAt": "2026-09-27T08:18:06.031Z",
+  "archive": "openspec/changes/archive/2026-09-27-add-telegram-push",
+  "verifiedDigest": "cb7159ed0b1a03efc2be938b6c5f9ed297656b002a3f3e89dcfde9701e9b7ea4",
+  "specs": {
+    "openspec/specs/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "openspec/specs/fetch-checkpoint/spec.md": "878e9a3f9b6bbe86822065c997092a37a1865dc715af1724722efcf6d2a22e17",
+    "openspec/specs/telegram-push/spec.md": "697d12bd1256fc369a89dd846881d90b09f066c49e675c83b0738972b41597ec"
+  },
+  "validation": {
+    "items": [
+      {
+        "id": "fetch-checkpoint",
+        "type": "spec",
+        "valid": true,
+        "issues": [],
+        "durationMs": 9
+      },
+      {
+        "id": "telegram-push",
+        "type": "spec",
+        "valid": true,
+        "issues": [],
+        "durationMs": 2
+      }
+    ],
+    "summary": {
+      "totals": {
+        "items": 2,
+        "passed": 2,
+        "failed": 0
+      },
+      "byType": {
+        "spec": {
+          "items": 2,
+          "passed": 2,
+          "failed": 0
+        }
+      }
+    },
+    "version": "1.0",
+    "root": {
+      "path": "<PROJECT_ROOT>",
+      "source": "nearest"
+    }
+  },
+  "output": "{\n  \"archive\": {\n    \"change\": \"add-telegram-push\",\n    \"archivedAs\": \"2026-09-27-add-telegram-push\",\n    \"path\": \"<PROJECT_ROOT>\\\\openspec\\\\changes\\\\archive\\\\2026-09-27-add-telegram-push\",\n    \"specsUpdated\": true,\n    \"totals\": {\n      \"added\": 5,\n      \"modified\": 0,\n      \"removed\": 0,\n      \"renamed\": 0\n    }\n  },\n  \"root\": {\n    \"path\": \"<PROJECT_ROOT>\",\n    \"source\": \"nearest\"\n  }\n}\n"
+}

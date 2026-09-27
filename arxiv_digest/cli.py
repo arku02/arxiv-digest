@@ -4,6 +4,8 @@
     python -m arxiv_digest daily            抓取上次執行至今的新論文
     python -m arxiv_digest backfill --days 7  回頭補抓過去 7 天
     python -m arxiv_digest status           看最近的執行紀錄
+    python -m arxiv_digest push             推送今天的論文到 Telegram
+    python -m arxiv_digest push --dry-run   只預覽，不發送
 
 排程只要固定跑 daily 就好。它會自己從「上次成功執行涵蓋到的時間點」接續，
 所以筆電關機好幾天再開，中間的論文一樣補得回來。接續時會再往回重查
@@ -14,11 +16,16 @@ from __future__ import annotations
 
 import argparse
 import logging
+import random
 import sys
+import time
 from datetime import datetime, timedelta, timezone
+from typing import Callable
 
+from arxiv_digest import notifier
 from arxiv_digest.config import Config, load_config
 from arxiv_digest.fetcher import ArxivFetcher
+from arxiv_digest.notifier import TelegramClient, format_message, keyboard
 from arxiv_digest.store import Store
 
 logger = logging.getLogger("arxiv_digest")
@@ -86,6 +93,70 @@ def run_fetch(config: Config, since: datetime | None = None) -> int:
             raise
 
 
+def run_push(
+    config: Config,
+    dry_run: bool = False,
+    rng: random.Random | None = None,
+    sleep: Callable[[float], None] | None = None,
+) -> int:
+    """從上次成功推送後新入庫的論文隨機抽樣並推送。
+
+    Returns:
+        實際送出的篇數；預覽模式為 0。
+    """
+    # 設定錯誤要在連線資料庫前擋下；預覽不需要 token
+    limit = config.telegram.limit()
+    if not dry_run:
+        token, chat_id = config.telegram.credentials()
+    rng = rng or random.Random()
+    pause = sleep or time.sleep
+
+    with Store(config.db) as store:
+        store.init_schema()
+
+        started_at = store.db_now()
+        after = store.last_success_push_start()
+        if after is None:
+            after = started_at - timedelta(days=1)
+            logger.info("首次推送，候選為過去 24 小時入庫的論文")
+        pool = store.push_pool(after, started_at)
+        chosen = rng.sample(pool, min(limit, len(pool)))
+        papers = store.papers_for_push(chosen)
+        logger.info("候選 %d 篇，抽出 %d 篇", len(pool), len(papers))
+
+        if dry_run:
+            print(f"候選 {len(pool)} 篇，抽出 {len(papers)} 篇（預覽，未發送、未記錄）\n")
+            buttons = " | ".join(text for text, _ in notifier.BUTTONS)
+            for paper in papers:
+                print(format_message(paper))
+                print(f"[{buttons}]")
+                print("-" * 40)
+            return 0
+
+        batch_id = store.start_push_batch(started_at, len(pool))
+        client = TelegramClient(token, chat_id)
+        sent = 0
+        try:
+            for index, paper in enumerate(papers):
+                if index:
+                    pause(notifier.SEND_INTERVAL)
+                message_id = client.send(format_message(paper), keyboard(paper.id))
+                store.record_push(batch_id, paper.id, chat_id, message_id)
+                sent += 1
+        except Exception as exc:
+            # 已送出的保留；本批標記失敗，下次候選池仍從上次成功批次算起
+            store.finish_push_batch(batch_id, "failed", sent, error=str(exc))
+            logger.error("推送中斷，已送出 %d 篇，其餘下次再推：%s", sent, exc)
+            raise
+
+        store.finish_push_batch(batch_id, "success", sent)
+        if not papers:
+            logger.info("沒有新論文可推送")
+        else:
+            logger.info("推送完成：%d 篇", sent)
+        return sent
+
+
 def cmd_init_db(args: argparse.Namespace, config: Config) -> int:
     with Store(config.db) as store:
         store.init_schema()
@@ -101,6 +172,11 @@ def cmd_daily(args: argparse.Namespace, config: Config) -> int:
 def cmd_backfill(args: argparse.Namespace, config: Config) -> int:
     since = utcnow() - timedelta(days=args.days)
     run_fetch(config, since=since)
+    return 0
+
+
+def cmd_push(args: argparse.Namespace, config: Config) -> int:
+    run_push(config, dry_run=args.dry_run)
     return 0
 
 
@@ -149,6 +225,9 @@ def build_parser() -> argparse.ArgumentParser:
     status = sub.add_parser("status", help="看最近的執行紀錄")
     status.add_argument("--limit", type=int, default=10, help="顯示幾筆（預設 10）")
 
+    push = sub.add_parser("push", help="推送今天的論文到 Telegram")
+    push.add_argument("--dry-run", action="store_true", help="只印出內容，不發送也不記錄")
+
     return parser
 
 
@@ -157,11 +236,17 @@ COMMANDS = {
     "daily": cmd_daily,
     "backfill": cmd_backfill,
     "status": cmd_status,
+    "push": cmd_push,
 }
 
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+
+    # 輸出導向檔案或管線時，Windows 預設編碼印不出 emoji；替換掉而不是整個指令失敗
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(errors="replace")
 
     logging.basicConfig(
         level=logging.DEBUG if args.verbose else logging.INFO,

@@ -1,0 +1,8 @@
+{
+  "change": "add-telegram-push",
+  "capturedAt": "2026-09-27T07:45:34.927Z",
+  "specs": {
+    "openspec/specs/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "openspec/specs/fetch-checkpoint/spec.md": "878e9a3f9b6bbe86822065c997092a37a1865dc715af1724722efcf6d2a22e17"
+  }
+}
