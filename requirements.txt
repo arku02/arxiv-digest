@@ -2,6 +2,7 @@
 # 版本沿用期中專案已驗證可用的組合（Python 3.13）
 
 requests==2.34.0          # 呼叫 arXiv API
+opencc==1.4.2             # 修正翻譯結果中混入的簡體字
 beautifulsoup4==4.14.3    # 解析回傳的 Atom XML
 lxml==6.1.0               # BeautifulSoup 的 xml parser
 PyMySQL==1.2.0            # 連線 MySQL

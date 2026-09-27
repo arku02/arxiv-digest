@@ -7,8 +7,10 @@
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import dataclass
 
+import opencc
 import requests
 
 SYSTEM_PROMPT = (
@@ -35,6 +37,50 @@ RESPONSE_SCHEMA = {
 
 # 批次內逐篇呼叫會延續載入；推送結束約 1 分鐘後釋放 7～8 GB 記憶體
 KEEP_ALIVE = "60s"
+
+
+# Big5 常用字區（5401 字）。台灣繁體文字幾乎只用這一區，這區的字一律不改。
+_COMMON_BIG5 = range(0xA440, 0xC67F)
+
+# 只收錄在台灣沒有其他常見意思的大陸用語；「優化」「支持」「數據」等不列入
+_TERMS = {
+    "視頻": "影片", "音頻": "音訊", "實時": "即時", "代碼": "程式碼", "信號": "訊號",
+    "信息": "資訊", "網絡": "網路", "數據集": "資料集", "魯棒性": "穩健性", "算法": "演算法",
+}
+# 「演算法」裡本來就有「算法」，前面是「演」時不替換
+_TERM_RE = re.compile("|".join(
+    ("(?<!演)算法" if term == "算法" else term)
+    for term in sorted(_TERMS, key=len, reverse=True)
+))
+
+_converter: opencc.OpenCC | None = None
+
+
+def _is_common(ch: str) -> bool:
+    try:
+        code = ch.encode("cp950")
+    except UnicodeEncodeError:
+        return False
+    return len(code) == 2 and int.from_bytes(code, "big") in _COMMON_BIG5
+
+
+def to_taiwan(text: str) -> str:
+    """修正模型偶爾混入的簡體字與大陸用語。
+
+    OpenCC 的詞組規則套在已經是繁體的文字上會誤改（文件→檔案、干擾→幹擾），
+    所以只逐字轉換常用字以外的字，且轉換結果必須是常用字。
+    """
+    global _converter
+    if _converter is None:
+        _converter = opencc.OpenCC("s2tw")
+    chars = []
+    for ch in text:
+        if "\u4e00" <= ch <= "\u9fff" and not _is_common(ch):
+            converted = _converter.convert(ch)
+            if converted != ch and all(_is_common(c) for c in converted):
+                ch = converted
+        chars.append(ch)
+    return _TERM_RE.sub(lambda m: _TERMS[m.group(0)], "".join(chars))
 
 
 class TranslationError(RuntimeError):
@@ -88,7 +134,10 @@ class OllamaTranslator:
 
         try:
             content = json.loads(response.json()["message"]["content"])
-            result = Translation(_clean(content["title_zh"]), _clean(content["summary_zh"]))
+            result = Translation(
+                to_taiwan(_clean(content["title_zh"])),
+                to_taiwan(_clean(content["summary_zh"])),
+            )
         except (ValueError, KeyError, TypeError, AttributeError) as exc:
             raise TranslationError(f"Ollama 回傳格式不符：{exc}") from None
         if not result.title_zh or not result.summary_zh:

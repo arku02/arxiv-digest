@@ -49,6 +49,17 @@ class OllamaSession:
         return helpers.Response(200, {'message': {'content': content}})
 
 
+class FixedOllama:
+    """Simulated Ollama that always returns the given Chinese text."""
+    def __init__(self, title_zh, summary_zh):
+        self.content = jsonlib.dumps({'title_zh': title_zh, 'summary_zh': summary_zh}, ensure_ascii=False)
+        self.calls = []
+
+    def post(self, url, json, timeout):
+        self.calls.append(json)
+        return helpers.Response(200, {'message': {'content': self.content}})
+
+
 class TranslationTests(unittest.TestCase):
     def setUp(self):
         self.network = patch('requests.sessions.Session.request', side_effect=AssertionError('Live HTTP forbidden'))
@@ -213,6 +224,44 @@ class TranslationTests(unittest.TestCase):
                 self.assertIn(name, '\n'.join(captured.output))
                 with patch.object(cli, 'load_config', return_value=config), patch.object(cli, 'run_fetch', return_value=0):
                     self.assertEqual(cli.main(['daily']), 0)
+
+    # ---------------- R9 ----------------
+
+    def pushed_text(self, title_zh, summary_zh):
+        _, bot = self.push(self.store_with(1), FixedOllama(title_zh, summary_zh))
+        return self.texts(bot)[0]
+
+    def test_R9_simplified_characters_fixed(self):
+        text = self.pushed_text('该方法这个数据的情况', '据此，与其说优化，不如说实验')
+        self.assertTrue(text.startswith('<b>該方法這個數據的情況</b>\n'))
+        self.assertIn('據此，與其說優化，不如說實驗', text)
+
+    def test_R9_valid_traditional_text_untouched(self):
+        valid = '干擾、證明了、台灣、文件與參數、更多任務、演算法、群組、吃力、後面、公里、瞭解'
+        text = self.pushed_text(valid, valid)
+        self.assertTrue(text.startswith(f'<b>{valid}</b>\n'))
+        self.assertIn(f'\n\n{valid}\n\n', text)
+
+    def test_R9_mainland_terms_replaced(self):
+        text = self.pushed_text('以算法處理視頻', '以算法處理視頻與實時信號、音頻、代碼、信息、網絡、數據集與魯棒性；演算法不變。')
+        self.assertTrue(text.startswith('<b>以演算法處理影片</b>\n'))
+        self.assertIn('以演算法處理影片與即時訊號、音訊、程式碼、資訊、網路、資料集與穩健性；演算法不變。', text)
+        self.assertNotIn('演演算法', text)
+
+    def test_R9_english_fallback_untouched(self):
+        store = self.store_with(1)
+        store.db.connection.execute("UPDATE papers SET title = 'Paper 1 about 视频'")
+        with self.assertLogs('arxiv_digest', level='WARNING'):
+            _, bot = self.push(store, OllamaSession(fail_at=0))
+        self.assertTrue(self.texts(bot)[0].startswith('<b>Paper 1 about 视频</b>'))
+
+    # ---------------- D2 ----------------
+
+    def test_D2_opencc_dependency_pinned(self):
+        lines = Path('requirements.txt').read_text(encoding='utf-8').splitlines()
+        self.assertTrue(any(line.split('#')[0].strip() == 'opencc==1.4.2' for line in lines))
+        import opencc
+        self.assertEqual(opencc.OpenCC('s2tw').convert('该'), '該')
 
     # ---------------- D1 ----------------
 
