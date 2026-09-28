@@ -1,7 +1,7 @@
 {
   "redactedAt": "2026-09-28",
   "record": "docs/REDACTION-2026-09-28.md",
-  "hashes": "originalSha256 = exact pre-redaction bytes (kept in local backup and Git history before this commit); publicCopySha256 = bytes of the redacted public copy. Neither replaces the logHash/digest fields inside the records.",
+  "hashes": "originalSha256 = exact pre-redaction bytes (kept in local backup and in the private original repository arxiv-digest-original; this repository's history was rewritten); publicCopySha256 = bytes of the redacted public copy. Neither replaces the logHash/digest fields inside the records.",
   "files": [
     {
       "file": ".workflow/evidence/add-feedback-collect.json",

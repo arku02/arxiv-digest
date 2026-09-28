@@ -71,7 +71,7 @@ npm run workflow -- archive <change-name>
 
 升級後產生的新證據會先把個人路徑換成 `<PROJECT_ROOT>`、`<HOME>` 等標記再計算雜湊，原始日誌只留在本機 `.workflow/private/`。升級前的 7 份證據、7 份回條與 4 份維護紀錄已改為公開去識別化副本（開頭有 `publicCopy` 欄位），原檔內的雜湊指的是當時的原始執行，詳見 [去識別化紀錄](docs/REDACTION-2026-09-28.md)。
 
-提交／推送前的 Git hooks 尚未啟用。Git 歷史中的舊版檔案仍含個人路徑，推送前檢查會掃描完整歷史，現在啟用會攔下推送；處理 Git 歷史之後，再依 [路徑隱私說明](docs/PRIVACY.md) 執行 `npm run privacy:install`。`npm run privacy:check`、`npm run privacy:history` 只掃描、不改檔，可隨時執行。
+Git 歷史已於 2026-09-28 改寫並改用新 repo，完整歷史掃描為 0 筆（見 [去識別化紀錄](docs/REDACTION-2026-09-28.md)）。提交／推送前的 Git hooks 尚未啟用；需要時依 [路徑隱私說明](docs/PRIVACY.md) 執行 `npm run privacy:install`，每個 clone 各啟用一次。`npm run privacy:check`、`npm run privacy:history` 只掃描、不改檔，可隨時執行。
 
 `config.ini` 是本機設定，不提交 Git。`node_modules/` 與 Python 快取可重新建立，不作為原始碼保存。Git 與專案資料夾備份不包含外部 MySQL 資料庫。
 

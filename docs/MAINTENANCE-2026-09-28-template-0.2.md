@@ -21,7 +21,7 @@
 
 - **未啟用 Git hooks。** 唯讀掃描（`npm run privacy:check`／`privacy:history`）顯示升級前的 18 份紀錄仍含個人路徑：`.workflow/evidence/` 7 份、`.workflow/receipts/` 7 份、`.workflow/maintenance/2026-09-27*/` 4 份；Git 歷史另有舊版 `README.md` 與 `workflow.config.json`。現在啟用會攔下推送。
 - **未去識別化舊紀錄。** 需依 PROJECT-RULES「歷史證據與隱私」另行整理並留紀錄。（後續：同日已完成，見 [去識別化紀錄](REDACTION-2026-09-28.md)。）
-- **未改寫 Git 歷史或強制推送。** 需另行確認範圍。
+- **未改寫 Git 歷史或強制推送。** 需另行確認範圍。（後續：使用者確認後，同日改寫歷史並改用新 repo，未強制推送原 repo，見 [去識別化紀錄](REDACTION-2026-09-28.md)。）
 
 ## 本次驗證
 
