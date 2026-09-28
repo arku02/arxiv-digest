@@ -154,7 +154,7 @@ npm test
 npm run workflow -- new <change-name>
 ```
 
-workflow.config.json 的 pythonExecutable 指向實際 Python；移到其他電腦時需要調整。Python 套件另依 requirements.txt 安裝。
+workflow.config.json 的 pythonExecutable 是可攜的 `python`；若要固定用某個 Python，在專案根目錄建立不進版控的 workflow.local.json 指定實際路徑（見 [路徑隱私說明](docs/PRIVACY.md)），移到其他電腦時調整這個本機檔。`npm run doctor` 可檢查環境。Python 套件另依 requirements.txt 安裝。
 測試使用模擬 Atom 回應、模擬 Telegram 與 Ollama 回應及記憶體資料庫，不讀取 config.ini，不連線 arXiv／MySQL／Telegram／Ollama；其中 SQLite 只驗證查詢邏輯，不代表真實 MySQL 驗證，模擬回應也不代表真實翻譯品質。
 
 ### 設定 Windows 排程
@@ -203,7 +203,7 @@ arXiv 在美東時間 20:00 公告：美國夏令時間是台灣早上 8 點，1
 
 ## 開發工具與歷史資料
 
-`scripts/`、`openspec/`、`tests/`、`package.json` 與 `workflow.config.json` 已是本專案的開發及驗證工具，需要保留。現行入口為第一版平面流程，不需要重新套用公開模板。
+`scripts/`、`openspec/`、`tests/`、`package.json` 與 `workflow.config.json` 已是本專案的開發及驗證工具，需要保留。現行入口為平面流程，2026-09-28 已手動更新到模板 0.2.0 的路徑隱私版本（見 [升級紀錄](docs/MAINTENANCE-2026-09-28-template-0.2.md)），不需要重新套用公開模板。
 
 `.workflow/baselines/`、`evidence/`、`receipts/` 保存歷史基準、驗證輸出及封存回條。試驗副本路徑屬於當時紀錄，不能解讀為原專案最近一次測試結果。
 

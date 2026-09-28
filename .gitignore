@@ -25,6 +25,12 @@ node_modules/
 .workflow/lock
 .npm-cache/
 
+# 本機執行設定、原始除錯日誌與暫存報告（路徑隱私）
+workflow.local.json
+.workflow/private/
+.workflow/imports/
+.workflow/python-*.json
+
 # 保留正式驗證及維護紀錄的原始輸出
 !.workflow/evidence/*.log
 !.workflow/maintenance/**/*.log

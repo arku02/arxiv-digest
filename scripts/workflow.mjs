@@ -3,7 +3,8 @@ import path from 'node:path';
 import { createHash, randomUUID } from 'node:crypto';
 import { createRequire } from 'node:module';
 import { spawnSync } from 'node:child_process';
-import { pathToFileURL } from 'node:url';
+import { pathToFileURL, fileURLToPath } from 'node:url';
+import { localSettings, publicValue, redact } from './privacy.mjs';
 
 const hash = data => createHash('sha256').update(data).digest('hex');
 const json = file => JSON.parse(fs.readFileSync(file, 'utf8'));
@@ -44,9 +45,13 @@ function walk(root, relative = '', skip = () => false) {
   return result;
 }
 
-function cliLocation(root) {
-  const require = createRequire(path.join(root, 'package.json'));
+export function cliLocation(root) {
+  root = fs.realpathSync(root);
+  const isolated = fs.existsSync(path.join(root, '.integration/package.json'));
+  const toolRoot = isolated ? path.join(root, '.integration') : root;
+  const require = createRequire(path.join(toolRoot, 'package.json'));
   const entry = require.resolve('@fission-ai/openspec');
+  if (isolated && !fs.realpathSync(entry).startsWith(path.join(toolRoot, 'node_modules') + path.sep)) fail('Install local tools: npm ci --prefix .integration --ignore-scripts --no-audit --no-fund');
   const packageRoot = path.resolve(path.dirname(entry), '..');
   return { bin: path.join(packageRoot, 'bin/openspec.js'), version: json(path.join(packageRoot, 'package.json')).version };
 }
@@ -60,22 +65,30 @@ export function openspec(root, args) {
   return result.stdout;
 }
 
-function context(root, id) {
+export function readWorkflowConfig(root) {
   root = fs.realpathSync(root);
-  if (!/^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/.test(id ?? '')) fail('Use a flat kebab-case change name');
   const config = json(safe(root, 'workflow.config.json'));
-  const installed = cliLocation(root).version;
-  if (installed !== config.openspecVersion) fail('OpenSpec version mismatch: ' + installed);
+  const local = localSettings(root);
+  if (config.testRunner === 'python-unittest') config.pythonExecutable = process.env.WORKFLOW_PYTHON || local.pythonExecutable || config.pythonExecutable;
   if (config.schema !== 'integrated') fail('Unsupported workflow schema');
   config.testRunner ??= 'node';
   if (!['node', 'python-unittest'].includes(config.testRunner)) fail('Unsupported test runner');
   if (config.testRunner === 'python-unittest' && (typeof config.pythonExecutable !== 'string' || !config.pythonExecutable.trim())) fail('Configure pythonExecutable');
   if (!Array.isArray(config.testFiles) || config.testFiles.length === 0) fail('Configure at least one test file');
   for (const file of config.testFiles) {
-    const pattern = config.testRunner === 'node' ? /^test\/[a-zA-Z0-9_./-]+\.test\.m?js$/ : /^tests?\/(?:[a-zA-Z0-9_-]+\/)*test_[a-zA-Z0-9_]+\.py$/;
+    const pattern = config.testRunner === 'node' ? /^tests?\/(?:[a-zA-Z0-9_-]+\/)*[a-zA-Z0-9_-]+\.test\.m?js$/ : /^tests?\/(?:[a-zA-Z0-9_-]+\/)*test_[a-zA-Z0-9_]+\.py$/;
     if (typeof file !== 'string' || !pattern.test(file)) fail('Invalid test path');
     safe(root, file);
   }
+  return config;
+}
+
+function context(root, id) {
+  root = fs.realpathSync(root);
+  if (!/^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/.test(id ?? '')) fail('Use a flat kebab-case change name');
+  const config = readWorkflowConfig(root);
+  const installed = cliLocation(root).version;
+  if (installed !== config.openspecVersion) fail('OpenSpec version mismatch: ' + installed);
   return { root, id, config, change: safe(root, 'openspec/changes/' + id),
     baseline: safe(root, '.workflow/baselines/' + id + '.json'),
     evidence: safe(root, '.workflow/evidence/' + id + '.json') };
@@ -87,11 +100,14 @@ function baseState(c) {
 
 function inputs(c) {
   const ignored = new Set(['node_modules', '.git', '.workflow', '.npm-cache', '.venv', 'venv', 'env']);
-  const files = walk(c.root, '', file => ignored.has(file.split('/')[0]) || file.split('/').includes('__pycache__')
-    || /\.py[cod]$/.test(file) || ['config.ini', '.env'].includes(file) || file === 'openspec/changes');
+  const files = walk(c.root, '', file => file.split('/').some(part => ignored.has(part) || part === '__pycache__')
+    || /\.py[cod]$/.test(file) || ['config.ini', '.env', 'workflow.local.json'].includes(file) || file === 'openspec/changes');
   files.push(...walk(c.root, 'openspec/changes/' + c.id));
   const manifest = Object.fromEntries(files.sort().map(file => [file, hash(fs.readFileSync(safe(c.root, file)))]));
-  return { digest: hash(JSON.stringify(manifest)), manifest };
+  // Include effective runtime settings in freshness without publishing local paths.
+  const runtimeHash = hash(JSON.stringify({ runner: c.config.testRunner, python: c.config.pythonExecutable ?? null,
+    privacy: localSettings(c.root), node: process.execPath }));
+  return { digest: hash(JSON.stringify({ manifest, runtimeHash })), manifest, runtimeHash };
 }
 
 function deltaRequirements(root, relative) {
@@ -164,11 +180,12 @@ function check(c, completed = false) {
 }
 
 export function executeTests(root, config, requiredTestIds) {
+  root = fs.realpathSync(root);
   const python = config.testRunner === 'python-unittest';
   const token = randomUUID();
   const reportPath = safe(root, '.workflow/python-' + token + '.json');
   const command = python
-    ? [config.pythonExecutable, '-B', 'scripts/unittest_runner.py', '--report', reportPath, '--token', token, ...config.testFiles]
+    ? [pythonCommand(root, config.pythonExecutable), '-B', fileURLToPath(new URL('./unittest_runner.py', import.meta.url)), '--report', reportPath, '--token', token, ...config.testFiles]
     : [process.execPath, '--test', '--test-reporter=tap', ...config.testFiles];
   const result = spawnSync(command[0], command.slice(1), {
     cwd: root, env: { ...env, PYTHONDONTWRITEBYTECODE: '1', PYTHONUTF8: '1' }, encoding: 'utf8', timeout: 60000, maxBuffer: 8 * 1024 * 1024,
@@ -194,6 +211,10 @@ export function executeTests(root, config, requiredTestIds) {
     exitCode: result.status, error: result.error?.message ?? null, runnerReport: report };
 }
 
+export function pythonCommand(root, executable) {
+  return /[\\/]/.test(executable) && !path.isAbsolute(executable) ? path.resolve(root, executable) : executable;
+}
+
 function verify(c) {
   // Replace old success before checking anything: a failed new attempt never leaves a valid receipt.
   writeJson(c.evidence, { change: c.id, passed: false, startedAt: new Date().toISOString() });
@@ -201,14 +222,20 @@ function verify(c) {
   const before = inputs(c);
   const result = executeTests(c.root, c.config, summary.requiredTestIds);
   const { output, passed, count, executedIds } = result;
+  const extra = [c.config.pythonExecutable, ...(localSettings(c.root).privateRoots ?? [])];
+  const publicOutput = redact(output, c.root, extra);
   const log = safe(c.root, '.workflow/evidence/' + c.id + (c.config.testRunner === 'python-unittest' ? '.log' : '.tap'));
-  fs.writeFileSync(log, output);
+  const rawLog = safe(c.root, '.workflow/private/' + c.id + '.log');
+  fs.mkdirSync(path.dirname(rawLog), { recursive: true });
+  fs.writeFileSync(rawLog, output, { mode: 0o600 });
+  fs.writeFileSync(log, publicOutput);
   const unchanged = before.digest === inputs(c).digest;
   const evidence = { change: c.id, passed: passed && unchanged, finishedAt: new Date().toISOString(),
-    node: process.version, openspec: c.config.openspecVersion, command: result.command,
-    testRunner: c.config.testRunner, runnerReport: result.runnerReport,
-    exitCode: result.exitCode, error: result.error, tests: count, executedIds, summary,
-    ...before, log: path.relative(c.root, log).replaceAll('\\', '/'), logHash: hash(output) };
+    node: process.version, openspec: c.config.openspecVersion, command: publicValue(result.command, c.root, extra),
+    testRunner: c.config.testRunner, runnerReport: publicValue(result.runnerReport, c.root, extra),
+    exitCode: result.exitCode, error: publicValue(result.error, c.root, extra), tests: count, executedIds, summary,
+    ...before, log: path.relative(c.root, log).replaceAll('\\', '/'), logHash: hash(publicOutput),
+    privacy: { format: 1, log: 'path-redacted-before-hashing', rawLog: 'local-only', command: 'display-only; not executable argv' } };
   writeJson(c.evidence, evidence);
   if (!unchanged) fail('Inputs changed during verification');
   if (!passed) fail('Tests failed or no tests executed; see ' + evidence.log);
@@ -258,8 +285,8 @@ export function runWorkflow(root, action, id) {
       // No success receipt is emitted until the synchronized specs pass too.
       // This check is post-mutation: failure requires inspecting the saved archive.
       const validation = JSON.parse(openspec(c.root, ['validate', '--specs', '--strict', '--json', '--no-interactive']));
-      const receipt = { change: id, archivedAt: new Date().toISOString(), archive: 'openspec/changes/archive/' + folder,
-        verifiedDigest: fresh.digest, specs: baseState(c), validation, output };
+      const receipt = publicValue({ change: id, archivedAt: new Date().toISOString(), archive: 'openspec/changes/archive/' + folder,
+        verifiedDigest: fresh.digest, specs: baseState(c), validation, output }, c.root, localSettings(c.root).privateRoots ?? []);
       writeJson(safe(c.root, '.workflow/receipts/' + id + '.json'), receipt);
       return receipt;
     }
@@ -271,6 +298,6 @@ export function runWorkflow(root, action, id) {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
-  try { console.log(JSON.stringify(runWorkflow(process.cwd(), process.argv[2], process.argv[3]), null, 2)); }
-  catch (error) { console.error(error.message); process.exitCode = 1; }
+  try { console.log(JSON.stringify(publicValue(runWorkflow(process.cwd(), process.argv[2], process.argv[3]), process.cwd(), localSettings(process.cwd()).privateRoots ?? []), null, 2)); }
+  catch (error) { console.error(redact(error.message, process.cwd())); process.exitCode = 1; }
 }

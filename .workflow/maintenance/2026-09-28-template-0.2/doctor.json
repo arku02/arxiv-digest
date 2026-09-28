@@ -1,0 +1,37 @@
+{
+  "root": "<PROJECT_ROOT>",
+  "node": "v24.18.0",
+  "ready": true,
+  "issues": [],
+  "testRunner": "python-unittest",
+  "openspec": "1.13.1",
+  "tests": [
+    {
+      "file": "tests/test_fetch_checkpoint.py",
+      "exists": true
+    },
+    {
+      "file": "tests/test_telegram_push.py",
+      "exists": true
+    },
+    {
+      "file": "tests/test_feedback_collect.py",
+      "exists": true
+    },
+    {
+      "file": "tests/test_push_translation.py",
+      "exists": true
+    }
+  ],
+  "python": {
+    "version": [
+      3,
+      13,
+      7
+    ],
+    "executable": "<LOCAL_PATH>",
+    "virtualenv": false,
+    "prefix": "<HOME>\\AppData\\Local\\Programs\\Python\\Python313"
+  },
+  "note": "Environment check only; run tests and workflow verify before delivery."
+}

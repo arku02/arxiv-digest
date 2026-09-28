@@ -1,0 +1,257 @@
+test_D1_lookback_scenarios_stay_offline (workflow_test_0.CheckpointTests.test_D1_lookback_scenarios_stay_offline) ... config.ini 的 [ARXIV] lookback_days 必須是非負整數
+invalid literal for int() with base 10: 'abc'
+ok
+test_R1_empty_time_range_makes_no_request (workflow_test_0.CheckpointTests.test_R1_empty_time_range_makes_no_request) ... 2026-09-28 17:04:56  INFO    查詢區間為空（since=2026-09-02 00:00:00 >= until=2026-09-01 00:00:00），跳過
+ok
+test_R1_no_results_is_success (workflow_test_0.CheckpointTests.test_R1_no_results_is_success) ... 2026-09-28 17:04:56  INFO    首次執行，回溯 1 天
+2026-09-28 17:04:56  INFO    查詢區間 2026-09-01 00:00:00 ~ 2026-09-02 00:00:00（共 24.0 小時）
+2026-09-28 17:04:56  INFO    查詢字串：(cat:cs.CL) AND submittedDate:[202609010000 TO 202609020000]
+2026-09-28 17:04:56  INFO    完成：取回 0 筆，新增 0 筆，略過重複 0 筆（資料庫現有 0 篇）
+ok
+test_R1_under_limit_is_success (workflow_test_0.CheckpointTests.test_R1_under_limit_is_success) ... 2026-09-28 17:04:56  INFO    首次執行，回溯 1 天
+2026-09-28 17:04:56  INFO    查詢區間 2026-09-01 00:00:00 ~ 2026-09-02 00:00:00（共 24.0 小時）
+2026-09-28 17:04:56  INFO    查詢字串：(cat:cs.CL) AND submittedDate:[202609010000 TO 202609020000]
+2026-09-28 17:04:56  INFO    已取得 2 筆（本頁 2 筆）
+2026-09-28 17:04:56  INFO    已取得 3 筆（本頁 1 筆）
+2026-09-28 17:04:56  INFO    完成：取回 3 筆，新增 3 筆，略過重複 0 筆（資料庫現有 3 篇）
+ok
+test_R2_exact_limit_probes_and_completes (workflow_test_0.CheckpointTests.test_R2_exact_limit_probes_and_completes) ... 2026-09-28 17:04:56  INFO    首次執行，回溯 1 天
+2026-09-28 17:04:56  INFO    查詢區間 2026-09-01 00:00:00 ~ 2026-09-02 00:00:00（共 24.0 小時）
+2026-09-28 17:04:56  INFO    查詢字串：(cat:cs.CL) AND submittedDate:[202609010000 TO 202609020000]
+2026-09-28 17:04:56  INFO    已取得 2 筆（本頁 2 筆）
+2026-09-28 17:04:56  INFO    已取得 4 筆（本頁 2 筆）
+2026-09-28 17:04:56  INFO    完成：取回 4 筆，新增 4 筆，略過重複 0 筆（資料庫現有 4 篇）
+ok
+test_R2_invalid_limits_fail_before_http (workflow_test_0.CheckpointTests.test_R2_invalid_limits_fail_before_http) ... ok
+test_R2_over_limit_is_not_success_and_does_not_save_partial_batch (workflow_test_0.CheckpointTests.test_R2_over_limit_is_not_success_and_does_not_save_partial_batch) ... 2026-09-28 17:04:56  INFO    首次執行，回溯 1 天
+2026-09-28 17:04:56  INFO    查詢區間 2026-09-01 00:00:00 ~ 2026-09-02 00:00:00（共 24.0 小時）
+2026-09-28 17:04:56  INFO    查詢字串：(cat:cs.CL) AND submittedDate:[202609010000 TO 202609020000]
+2026-09-28 17:04:56  INFO    已取得 2 筆（本頁 2 筆）
+2026-09-28 17:04:56  INFO    已取得 4 筆（本頁 2 筆）
+2026-09-28 17:04:56  ERROR   抓取失敗，這段區間會在下次執行時重抓：已達單次上限 4 筆，區間尚未抓完；查詢區間 UTC 2026-09-01 00:00 ~ 2026-09-02 00:00。本批次未寫入，續抓起點保留。請調高 max_results 後重跑；系統不會自動調高上限。
+ok
+test_R2_probe_failure_is_not_success (workflow_test_0.CheckpointTests.test_R2_probe_failure_is_not_success) ... 2026-09-28 17:04:56  INFO    首次執行，回溯 1 天
+2026-09-28 17:04:56  INFO    查詢區間 2026-09-01 00:00:00 ~ 2026-09-02 00:00:00（共 24.0 小時）
+2026-09-28 17:04:56  INFO    查詢字串：(cat:cs.CL) AND submittedDate:[202609010000 TO 202609020000]
+2026-09-28 17:04:56  INFO    已取得 2 筆（本頁 2 筆）
+2026-09-28 17:04:56  INFO    已取得 4 筆（本頁 2 筆）
+2026-09-28 17:04:56  ERROR   抓取失敗，這段區間會在下次執行時重抓：probe unavailable
+ok
+test_R3_covered_failure_is_retired (workflow_test_0.CheckpointTests.test_R3_covered_failure_is_retired) ... ok
+test_R3_first_failed_attempt_keeps_start_on_later_day (workflow_test_0.CheckpointTests.test_R3_first_failed_attempt_keeps_start_on_later_day) ... 2026-09-28 17:04:56  INFO    首次執行，回溯 1 天
+2026-09-28 17:04:56  INFO    查詢區間 2026-09-01 00:00:00 ~ 2026-09-02 00:00:00（共 24.0 小時）
+2026-09-28 17:04:56  INFO    查詢字串：(cat:cs.CL) AND submittedDate:[202609010000 TO 202609020000]
+2026-09-28 17:04:56  INFO    已取得 2 筆（本頁 2 筆）
+2026-09-28 17:04:56  INFO    已取得 4 筆（本頁 2 筆）
+2026-09-28 17:04:56  ERROR   抓取失敗，這段區間會在下次執行時重抓：已達單次上限 4 筆，區間尚未抓完；查詢區間 UTC 2026-09-01 00:00 ~ 2026-09-02 00:00。本批次未寫入，續抓起點保留。請調高 max_results 後重跑；系統不會自動調高上限。
+2026-09-28 17:04:56  INFO    從上次斷點接續（含回看 4 天）：2026-09-01 00:00:00
+2026-09-28 17:04:56  INFO    查詢區間 2026-09-01 00:00:00 ~ 2026-09-03 00:00:00（共 48.0 小時）
+2026-09-28 17:04:56  INFO    查詢字串：(cat:cs.CL) AND submittedDate:[202609010000 TO 202609030000]
+2026-09-28 17:04:56  INFO    已取得 2 筆（本頁 2 筆）
+2026-09-28 17:04:57  INFO    已取得 4 筆（本頁 2 筆）
+2026-09-28 17:04:57  INFO    已取得 5 筆（本頁 1 筆）
+2026-09-28 17:04:57  INFO    完成：取回 5 筆，新增 5 筆，略過重複 0 筆（資料庫現有 5 篇）
+ok
+test_R3_older_failed_backfill_is_not_hidden_by_recent_success (workflow_test_0.CheckpointTests.test_R3_older_failed_backfill_is_not_hidden_by_recent_success) ... ok
+test_R3_repeated_complete_fetch_remains_deduplicated (workflow_test_0.CheckpointTests.test_R3_repeated_complete_fetch_remains_deduplicated) ... 2026-09-28 17:04:57  INFO    查詢區間 2026-09-01 00:00:00 ~ 2026-09-02 00:00:00（共 24.0 小時）
+2026-09-28 17:04:57  INFO    查詢字串：(cat:cs.CL) AND submittedDate:[202609010000 TO 202609020000]
+2026-09-28 17:04:57  INFO    已取得 2 筆（本頁 2 筆）
+2026-09-28 17:04:57  INFO    已取得 3 筆（本頁 1 筆）
+2026-09-28 17:04:57  INFO    完成：取回 3 筆，新增 3 筆，略過重複 0 筆（資料庫現有 3 篇）
+2026-09-28 17:04:57  INFO    查詢區間 2026-09-01 00:00:00 ~ 2026-09-02 00:00:00（共 24.0 小時）
+2026-09-28 17:04:57  INFO    查詢字串：(cat:cs.CL) AND submittedDate:[202609010000 TO 202609020000]
+2026-09-28 17:04:57  INFO    已取得 2 筆（本頁 2 筆）
+2026-09-28 17:04:57  INFO    已取得 3 筆（本頁 1 筆）
+2026-09-28 17:04:57  INFO    完成：取回 3 筆，新增 0 筆，略過重複 3 筆（資料庫現有 3 篇）
+ok
+test_R3_repeated_failures_keep_same_start (workflow_test_0.CheckpointTests.test_R3_repeated_failures_keep_same_start) ... 2026-09-28 17:04:57  INFO    從上次斷點接續（含回看 4 天）：2026-08-28 00:00:00
+2026-09-28 17:04:57  INFO    查詢區間 2026-08-28 00:00:00 ~ 2026-09-02 00:00:00（共 120.0 小時）
+2026-09-28 17:04:57  INFO    查詢字串：(cat:cs.CL) AND submittedDate:[202608280000 TO 202609020000]
+2026-09-28 17:04:57  INFO    已取得 2 筆（本頁 2 筆）
+2026-09-28 17:04:57  INFO    已取得 4 筆（本頁 2 筆）
+2026-09-28 17:04:57  ERROR   抓取失敗，這段區間會在下次執行時重抓：已達單次上限 4 筆，區間尚未抓完；查詢區間 UTC 2026-08-28 00:00 ~ 2026-09-02 00:00。本批次未寫入，續抓起點保留。請調高 max_results 後重跑；系統不會自動調高上限。
+2026-09-28 17:04:57  INFO    從上次斷點接續（含回看 4 天）：2026-08-28 00:00:00
+2026-09-28 17:04:57  INFO    查詢區間 2026-08-28 00:00:00 ~ 2026-09-03 00:00:00（共 144.0 小時）
+2026-09-28 17:04:57  INFO    查詢字串：(cat:cs.CL) AND submittedDate:[202608280000 TO 202609030000]
+2026-09-28 17:04:57  INFO    已取得 2 筆（本頁 2 筆）
+2026-09-28 17:04:57  INFO    已取得 4 筆（本頁 2 筆）
+2026-09-28 17:04:57  ERROR   抓取失敗，這段區間會在下次執行時重抓：已達單次上限 4 筆，區間尚未抓完；查詢區間 UTC 2026-08-28 00:00 ~ 2026-09-03 00:00。本批次未寫入，續抓起點保留。請調高 max_results 後重跑；系統不會自動調高上限。
+2026-09-28 17:04:57  INFO    從上次斷點接續（含回看 4 天）：2026-08-28 00:00:00
+2026-09-28 17:04:57  INFO    查詢區間 2026-08-28 00:00:00 ~ 2026-09-04 00:00:00（共 168.0 小時）
+2026-09-28 17:04:57  INFO    查詢字串：(cat:cs.CL) AND submittedDate:[202608280000 TO 202609040000]
+2026-09-28 17:04:57  INFO    已取得 2 筆（本頁 2 筆）
+2026-09-28 17:04:57  INFO    已取得 3 筆（本頁 1 筆）
+2026-09-28 17:04:57  INFO    完成：取回 3 筆，新增 3 筆，略過重複 0 筆（資料庫現有 3 篇）
+ok
+test_R3_retry_from_previous_success_keeps_window (workflow_test_0.CheckpointTests.test_R3_retry_from_previous_success_keeps_window) ... ok
+test_R3_running_attempt_is_retried (workflow_test_0.CheckpointTests.test_R3_running_attempt_is_retried) ... ok
+test_R4_cli_returns_failure_with_actionable_message (workflow_test_0.CheckpointTests.test_R4_cli_returns_failure_with_actionable_message) ... ok
+test_R5_backfill_keeps_explicit_start (workflow_test_0.CheckpointTests.test_R5_backfill_keeps_explicit_start) ... 2026-09-28 17:04:57  INFO    查詢區間 2026-08-29 00:00:00 ~ 2026-09-05 00:00:00（共 168.0 小時）
+2026-09-28 17:04:57  INFO    查詢字串：(cat:cs.CL) AND submittedDate:[202608290000 TO 202609050000]
+2026-09-28 17:04:57  INFO    已取得 2 筆（本頁 2 筆）
+2026-09-28 17:04:57  INFO    已取得 3 筆（本頁 1 筆）
+2026-09-28 17:04:57  INFO    完成：取回 3 筆，新增 3 筆，略過重複 0 筆（資料庫現有 3 篇）
+ok
+test_R5_default_and_zero_lookback_from_config_file (workflow_test_0.CheckpointTests.test_R5_default_and_zero_lookback_from_config_file) ... ok
+test_R5_invalid_lookback_rejected_before_connection (workflow_test_0.CheckpointTests.test_R5_invalid_lookback_rejected_before_connection) ... config.ini 的 [ARXIV] lookback_days 必須是非負整數
+invalid literal for int() with base 10: 'abc'
+ok
+test_R5_lookback_zero_misses_announced_paper (workflow_test_0.CheckpointTests.test_R5_lookback_zero_misses_announced_paper) ... 2026-09-28 17:04:57  INFO    從上次斷點接續（含回看 0 天）：2026-09-18 02:12:00
+2026-09-28 17:04:57  INFO    查詢區間 2026-09-18 02:12:00 ~ 2026-09-19 08:00:00（共 29.8 小時）
+2026-09-28 17:04:57  INFO    查詢字串：(cat:cs.CL) AND submittedDate:[202609180212 TO 202609190800]
+2026-09-28 17:04:57  INFO    完成：取回 0 筆，新增 0 筆，略過重複 0 筆（資料庫現有 0 篇）
+2026-09-28 17:04:57  INFO    從上次斷點接續（含回看 0 天）：2026-09-19 08:00:00
+2026-09-28 17:04:57  INFO    查詢區間 2026-09-19 08:00:00 ~ 2026-09-20 08:10:00（共 24.2 小時）
+2026-09-28 17:04:57  INFO    查詢字串：(cat:cs.CL) AND submittedDate:[202609190800 TO 202609200810]
+2026-09-28 17:04:57  INFO    完成：取回 0 筆，新增 0 筆，略過重複 0 筆（資料庫現有 0 篇）
+2026-09-28 17:04:57  INFO    從上次斷點接續（含回看 0 天）：2026-09-20 08:10:00
+2026-09-28 17:04:57  INFO    查詢區間 2026-09-20 08:10:00 ~ 2026-09-21 08:00:00（共 23.8 小時）
+2026-09-28 17:04:57  INFO    查詢字串：(cat:cs.CL) AND submittedDate:[202609200810 TO 202609210800]
+2026-09-28 17:04:57  INFO    完成：取回 0 筆，新增 0 筆，略過重複 0 筆（資料庫現有 0 篇）
+2026-09-28 17:04:57  INFO    從上次斷點接續（含回看 0 天）：2026-09-21 08:00:00
+2026-09-28 17:04:57  INFO    查詢區間 2026-09-21 08:00:00 ~ 2026-09-22 09:11:00（共 25.2 小時）
+2026-09-28 17:04:57  INFO    查詢字串：(cat:cs.CL) AND submittedDate:[202609210800 TO 202609220911]
+2026-09-28 17:04:57  INFO    已取得 1 筆（本頁 1 筆）
+2026-09-28 17:04:57  INFO    完成：取回 1 筆，新增 1 筆，略過重複 0 筆（資料庫現有 1 篇）
+ok
+test_R5_overlap_is_deduplicated (workflow_test_0.CheckpointTests.test_R5_overlap_is_deduplicated) ... 2026-09-28 17:04:57  INFO    從上次斷點接續（含回看 4 天）：2026-09-14 02:12:00
+2026-09-28 17:04:57  INFO    查詢區間 2026-09-14 02:12:00 ~ 2026-09-21 08:00:00（共 173.8 小時）
+2026-09-28 17:04:57  INFO    查詢字串：(cat:cs.CL) AND submittedDate:[202609140212 TO 202609210800]
+2026-09-28 17:04:57  INFO    已取得 1 筆（本頁 1 筆）
+2026-09-28 17:04:57  INFO    完成：取回 1 筆，新增 1 筆，略過重複 0 筆（資料庫現有 1 篇）
+2026-09-28 17:04:57  INFO    從上次斷點接續（含回看 4 天）：2026-09-17 08:00:00
+2026-09-28 17:04:57  INFO    查詢區間 2026-09-17 08:00:00 ~ 2026-09-22 08:00:00（共 120.0 小時）
+2026-09-28 17:04:57  INFO    查詢字串：(cat:cs.CL) AND submittedDate:[202609170800 TO 202609220800]
+2026-09-28 17:04:57  INFO    已取得 2 筆（本頁 2 筆）
+2026-09-28 17:04:57  INFO    完成：取回 2 筆，新增 1 筆，略過重複 1 筆（資料庫現有 2 篇）
+ok
+test_R5_paper_announced_after_earlier_runs_is_saved (workflow_test_0.CheckpointTests.test_R5_paper_announced_after_earlier_runs_is_saved) ... 2026-09-28 17:04:57  INFO    從上次斷點接續（含回看 4 天）：2026-09-14 02:12:00
+2026-09-28 17:04:57  INFO    查詢區間 2026-09-14 02:12:00 ~ 2026-09-19 08:00:00（共 125.8 小時）
+2026-09-28 17:04:57  INFO    查詢字串：(cat:cs.CL) AND submittedDate:[202609140212 TO 202609190800]
+2026-09-28 17:04:57  INFO    完成：取回 0 筆，新增 0 筆，略過重複 0 筆（資料庫現有 0 篇）
+2026-09-28 17:04:57  INFO    從上次斷點接續（含回看 4 天）：2026-09-15 08:00:00
+2026-09-28 17:04:57  INFO    查詢區間 2026-09-15 08:00:00 ~ 2026-09-20 08:10:00（共 120.2 小時）
+2026-09-28 17:04:57  INFO    查詢字串：(cat:cs.CL) AND submittedDate:[202609150800 TO 202609200810]
+2026-09-28 17:04:57  INFO    完成：取回 0 筆，新增 0 筆，略過重複 0 筆（資料庫現有 0 篇）
+2026-09-28 17:04:57  INFO    從上次斷點接續（含回看 4 天）：2026-09-16 08:10:00
+2026-09-28 17:04:57  INFO    查詢區間 2026-09-16 08:10:00 ~ 2026-09-21 08:00:00（共 119.8 小時）
+2026-09-28 17:04:57  INFO    查詢字串：(cat:cs.CL) AND submittedDate:[202609160810 TO 202609210800]
+2026-09-28 17:04:57  INFO    完成：取回 0 筆，新增 0 筆，略過重複 0 筆（資料庫現有 0 篇）
+2026-09-28 17:04:57  INFO    從上次斷點接續（含回看 4 天）：2026-09-17 08:00:00
+2026-09-28 17:04:57  INFO    查詢區間 2026-09-17 08:00:00 ~ 2026-09-22 09:11:00（共 121.2 小時）
+2026-09-28 17:04:57  INFO    查詢字串：(cat:cs.CL) AND submittedDate:[202609170800 TO 202609220911]
+2026-09-28 17:04:57  INFO    已取得 2 筆（本頁 2 筆）
+2026-09-28 17:04:57  INFO    完成：取回 2 筆，新增 2 筆，略過重複 0 筆（資料庫現有 2 篇）
+ok
+test_D1_registered_and_offline (workflow_test_1.PushTests.test_D1_registered_and_offline) ... 2026-09-28 17:04:57  INFO    候選 23 篇，抽出 10 篇
+2026-09-28 17:04:57  INFO    推送完成：10 篇
+ok
+test_R1_empty_pool_sends_nothing (workflow_test_1.PushTests.test_R1_empty_pool_sends_nothing) ... 2026-09-28 17:04:57  INFO    首次推送，候選為過去 24 小時入庫的論文
+2026-09-28 17:04:57  INFO    候選 0 篇，抽出 0 篇
+2026-09-28 17:04:57  INFO    沒有新論文可推送
+ok
+test_R1_first_batch_uses_last_24_hours (workflow_test_1.PushTests.test_R1_first_batch_uses_last_24_hours) ... 2026-09-28 17:04:57  INFO    首次推送，候選為過去 24 小時入庫的論文
+2026-09-28 17:04:57  INFO    候選 1 篇，抽出 1 篇
+2026-09-28 17:04:57  INFO    推送完成：1 篇
+ok
+test_R1_samples_limit_from_new_unpushed_pool (workflow_test_1.PushTests.test_R1_samples_limit_from_new_unpushed_pool) ... 2026-09-28 17:04:57  INFO    候選 23 篇，抽出 10 篇
+2026-09-28 17:04:57  INFO    推送完成：10 篇
+ok
+test_R1_small_pool_sends_all (workflow_test_1.PushTests.test_R1_small_pool_sends_all) ... 2026-09-28 17:04:57  INFO    首次推送，候選為過去 24 小時入庫的論文
+2026-09-28 17:04:57  INFO    候選 3 篇，抽出 3 篇
+2026-09-28 17:04:57  INFO    推送完成：3 篇
+ok
+test_R2_message_content_and_buttons (workflow_test_1.PushTests.test_R2_message_content_and_buttons) ... ok
+test_R2_short_fields_are_not_clipped_and_payload_is_html (workflow_test_1.PushTests.test_R2_short_fields_are_not_clipped_and_payload_is_html) ... 2026-09-28 17:04:57  INFO    首次推送，候選為過去 24 小時入庫的論文
+2026-09-28 17:04:57  INFO    候選 1 篇，抽出 1 篇
+2026-09-28 17:04:57  INFO    推送完成：1 篇
+ok
+test_R3_each_send_recorded_and_not_repeated (workflow_test_1.PushTests.test_R3_each_send_recorded_and_not_repeated) ... 2026-09-28 17:04:57  INFO    候選 23 篇，抽出 10 篇
+2026-09-28 17:04:57  INFO    推送完成：10 篇
+2026-09-28 17:04:57  INFO    候選 5 篇，抽出 5 篇
+2026-09-28 17:04:57  INFO    推送完成：5 篇
+ok
+test_R3_failure_mid_batch_keeps_sent_and_retries_rest (workflow_test_1.PushTests.test_R3_failure_mid_batch_keeps_sent_and_retries_rest) ... 2026-09-28 17:04:57  INFO    候選 20 篇，抽出 10 篇
+2026-09-28 17:04:57  INFO    推送完成：10 篇
+ok
+test_R4_fetch_unaffected_by_telegram_section (workflow_test_1.PushTests.test_R4_fetch_unaffected_by_telegram_section) ... ok
+test_R4_forbidden_hints_start (workflow_test_1.PushTests.test_R4_forbidden_hints_start) ... ok
+test_R4_invalid_daily_limit_fails_before_db (workflow_test_1.PushTests.test_R4_invalid_daily_limit_fails_before_db) ... ok
+test_R4_placeholder_credentials_fail_before_db (workflow_test_1.PushTests.test_R4_placeholder_credentials_fail_before_db) ... ok
+test_R4_token_is_masked_in_errors (workflow_test_1.PushTests.test_R4_token_is_masked_in_errors) ... ok
+test_R5_dry_run_cli_exit_code (workflow_test_1.PushTests.test_R5_dry_run_cli_exit_code) ... 2026-09-28 17:04:57  INFO    候選 23 篇，抽出 10 篇
+ok
+test_R5_dry_run_previews_without_sending_or_recording (workflow_test_1.PushTests.test_R5_dry_run_previews_without_sending_or_recording) ... 2026-09-28 17:04:57  INFO    候選 23 篇，抽出 10 篇
+ok
+test_D1_registered_and_offline (workflow_test_2.CollectTests.test_D1_registered_and_offline) ... 2026-09-28 17:04:57  INFO    收集完成：記錄 1 筆回饋，略過 0 筆更新
+ok
+test_R1_existing_feedback_is_overwritten_and_keeps_first_time (workflow_test_2.CollectTests.test_R1_existing_feedback_is_overwritten_and_keeps_first_time) ... 2026-09-28 17:04:57  INFO    收集完成：記錄 1 筆回饋，略過 0 筆更新
+ok
+test_R1_last_click_wins (workflow_test_2.CollectTests.test_R1_last_click_wins) ... 2026-09-28 17:04:57  INFO    收集完成：記錄 2 筆回饋，略過 0 筆更新
+ok
+test_R1_new_feedback_saved_and_acknowledged (workflow_test_2.CollectTests.test_R1_new_feedback_saved_and_acknowledged) ... 2026-09-28 17:04:57  INFO    收集完成：記錄 1 筆回饋，略過 0 筆更新
+2026-09-28 17:04:57  INFO    收集完成：記錄 0 筆回饋，略過 0 筆更新
+ok
+test_R1_reads_multiple_batches_in_order (workflow_test_2.CollectTests.test_R1_reads_multiple_batches_in_order) ... 2026-09-28 17:04:57  INFO    收集完成：記錄 3 筆回饋，略過 0 筆更新
+ok
+test_R2_invalid_updates_are_ignored_and_acknowledged (workflow_test_2.CollectTests.test_R2_invalid_updates_are_ignored_and_acknowledged) ... ok
+test_R3_button_marks_current_choice (workflow_test_2.CollectTests.test_R3_button_marks_current_choice) ... 2026-09-28 17:04:57  INFO    收集完成：記錄 1 筆回饋，略過 0 筆更新
+ok
+test_R3_edit_failure_only_warns (workflow_test_2.CollectTests.test_R3_edit_failure_only_warns) ... ok
+test_R3_not_modified_is_success (workflow_test_2.CollectTests.test_R3_not_modified_is_success) ... ok
+test_R4_database_failure_redelivers_and_is_idempotent (workflow_test_2.CollectTests.test_R4_database_failure_redelivers_and_is_idempotent) ... 2026-09-28 17:04:57  INFO    收集完成：記錄 3 筆回饋，略過 0 筆更新
+ok
+test_R4_get_updates_failure_masks_token (workflow_test_2.CollectTests.test_R4_get_updates_failure_masks_token) ... ok
+test_R4_invalid_daily_limit_does_not_block_collect (workflow_test_2.CollectTests.test_R4_invalid_daily_limit_does_not_block_collect) ... ok
+test_R4_placeholder_credentials_fail_before_db (workflow_test_2.CollectTests.test_R4_placeholder_credentials_fail_before_db) ... ok
+test_R5_status_summary (workflow_test_2.CollectTests.test_R5_status_summary) ... ok
+test_R5_status_without_pushes (workflow_test_2.CollectTests.test_R5_status_without_pushes) ... ok
+test_D1_registered_and_offline (workflow_test_3.TranslationTests.test_D1_registered_and_offline) ... 2026-09-28 17:04:57  INFO    首次推送，候選為過去 24 小時入庫的論文
+2026-09-28 17:04:57  INFO    候選 2 篇，抽出 2 篇
+2026-09-28 17:04:57  INFO    推送完成：2 篇
+2026-09-28 17:04:57  INFO    首次推送，候選為過去 24 小時入庫的論文
+2026-09-28 17:04:57  INFO    候選 2 篇，抽出 2 篇
+2026-09-28 17:04:57  WARNING 翻譯失敗，本批其餘論文改推英文：無法連線 Ollama（http://127.0.0.1:11434）：Max retries exceeded: connection refused
+2026-09-28 17:04:57  INFO    推送完成：2 篇
+ok
+test_D2_opencc_dependency_pinned (workflow_test_3.TranslationTests.test_D2_opencc_dependency_pinned) ... ok
+test_R2_long_translation_is_clipped (workflow_test_3.TranslationTests.test_R2_long_translation_is_clipped) ... ok
+test_R2_translated_message_format (workflow_test_3.TranslationTests.test_R2_translated_message_format) ... ok
+test_R2_untranslated_format_unchanged (workflow_test_3.TranslationTests.test_R2_untranslated_format_unchanged) ... ok
+test_R6_dry_run_translates_without_telegram (workflow_test_3.TranslationTests.test_R6_dry_run_translates_without_telegram) ... 2026-09-28 17:04:57  INFO    首次推送，候選為過去 24 小時入庫的論文
+2026-09-28 17:04:57  INFO    候選 2 篇，抽出 2 篇
+ok
+test_R6_push_translates_each_paper_once (workflow_test_3.TranslationTests.test_R6_push_translates_each_paper_once) ... 2026-09-28 17:04:57  INFO    首次推送，候選為過去 24 小時入庫的論文
+2026-09-28 17:04:57  INFO    候選 3 篇，抽出 3 篇
+2026-09-28 17:04:57  INFO    推送完成：3 篇
+ok
+test_R7_empty_fields_and_http_errors_fall_back (workflow_test_3.TranslationTests.test_R7_empty_fields_and_http_errors_fall_back) ... ok
+test_R7_invalid_output_mid_batch (workflow_test_3.TranslationTests.test_R7_invalid_output_mid_batch) ... ok
+test_R7_ollama_down_falls_back_after_one_request (workflow_test_3.TranslationTests.test_R7_ollama_down_falls_back_after_one_request) ... ok
+test_R8_defaults_and_overrides (workflow_test_3.TranslationTests.test_R8_defaults_and_overrides) ... ok
+test_R8_disabled_or_missing_section_makes_no_request (workflow_test_3.TranslationTests.test_R8_disabled_or_missing_section_makes_no_request) ... 2026-09-28 17:04:57  INFO    首次推送，候選為過去 24 小時入庫的論文
+2026-09-28 17:04:57  INFO    候選 2 篇，抽出 2 篇
+2026-09-28 17:04:57  INFO    推送完成：2 篇
+2026-09-28 17:04:57  INFO    首次推送，候選為過去 24 小時入庫的論文
+2026-09-28 17:04:57  INFO    候選 2 篇，抽出 2 篇
+2026-09-28 17:04:57  INFO    推送完成：2 篇
+ok
+test_R8_invalid_settings_fail_before_db_and_daily_unaffected (workflow_test_3.TranslationTests.test_R8_invalid_settings_fail_before_db_and_daily_unaffected) ... ok
+test_R9_english_fallback_untouched (workflow_test_3.TranslationTests.test_R9_english_fallback_untouched) ... ok
+test_R9_mainland_terms_replaced (workflow_test_3.TranslationTests.test_R9_mainland_terms_replaced) ... 2026-09-28 17:04:57  INFO    首次推送，候選為過去 24 小時入庫的論文
+2026-09-28 17:04:57  INFO    候選 1 篇，抽出 1 篇
+2026-09-28 17:04:57  INFO    推送完成：1 篇
+ok
+test_R9_simplified_characters_fixed (workflow_test_3.TranslationTests.test_R9_simplified_characters_fixed) ... 2026-09-28 17:04:57  INFO    首次推送，候選為過去 24 小時入庫的論文
+2026-09-28 17:04:57  INFO    候選 1 篇，抽出 1 篇
+2026-09-28 17:04:57  INFO    推送完成：1 篇
+ok
+test_R9_valid_traditional_text_untouched (workflow_test_3.TranslationTests.test_R9_valid_traditional_text_untouched) ... 2026-09-28 17:04:57  INFO    首次推送，候選為過去 24 小時入庫的論文
+2026-09-28 17:04:57  INFO    候選 1 篇，抽出 1 篇
+2026-09-28 17:04:57  INFO    推送完成：1 篇
+ok
+
+----------------------------------------------------------------------
+Ran 70 tests in 0.494s
+
+OK

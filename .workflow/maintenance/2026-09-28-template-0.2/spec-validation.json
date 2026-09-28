@@ -1,0 +1,44 @@
+{
+  "items": [
+    {
+      "id": "feedback-collect",
+      "type": "spec",
+      "valid": true,
+      "issues": [],
+      "durationMs": 30
+    },
+    {
+      "id": "fetch-checkpoint",
+      "type": "spec",
+      "valid": true,
+      "issues": [],
+      "durationMs": 6
+    },
+    {
+      "id": "telegram-push",
+      "type": "spec",
+      "valid": true,
+      "issues": [],
+      "durationMs": 3
+    }
+  ],
+  "summary": {
+    "totals": {
+      "items": 3,
+      "passed": 3,
+      "failed": 0
+    },
+    "byType": {
+      "spec": {
+        "items": 3,
+        "passed": 3,
+        "failed": 0
+      }
+    }
+  },
+  "version": "1.0",
+  "root": {
+    "path": "<PROJECT_ROOT>",
+    "source": "nearest"
+  }
+}

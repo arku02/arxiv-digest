@@ -1,6 +1,6 @@
 # arXiv Digest 開發與驗證手冊
 
-本專案已接入第一版模板的平面工作流程，工具位於 `scripts/`，規格由 OpenSpec 1.13.1 管理。沿用此入口即可，不需要重新導入模板或改成 `.integration/`。
+本專案使用模板的平面工作流程，工具位於 `scripts/`，規格由 OpenSpec 1.13.1 管理。2026-09-28 已手動將工具更新到模板 0.2.0 的路徑隱私版本（見 [升級紀錄](docs/MAINTENANCE-2026-09-28-template-0.2.md)）。沿用此入口即可，不需要重新導入模板或改成 `.integration/`。
 
 ## 1. 準備環境
 
@@ -11,7 +11,9 @@ python -m pip install -r requirements.txt
 npm ci --ignore-scripts --no-audit --no-fund
 ```
 
-`workflow.config.json` 已登錄 `tests/test_fetch_checkpoint.py`、`tests/test_telegram_push.py`、`tests/test_feedback_collect.py` 與 `tests/test_push_translation.py`，不必替換成範例測試路徑。`pythonExecutable` 必須指向已安裝專案套件的 Python；移機或切換虛擬環境時才調整。
+`workflow.config.json` 已登錄 `tests/test_fetch_checkpoint.py`、`tests/test_telegram_push.py`、`tests/test_feedback_collect.py` 與 `tests/test_push_translation.py`，不必替換成範例測試路徑。共用設定的 `pythonExecutable` 是可攜的 `python`；本機實際路徑寫在不進版控的 `workflow.local.json`（格式見 [路徑隱私說明](docs/PRIVACY.md)），必須指向已安裝專案套件的 Python。移機或切換虛擬環境時調整本機檔即可；選擇順序為 `WORKFLOW_PYTHON` 環境變數 → `workflow.local.json` → 共用設定。
+
+安裝後可先執行 `npm run doctor`，檢查 Node、OpenSpec 版本、測試檔與 Python 是否可用；它只檢查環境，不代表測試通過。
 
 本手冊不會自動建立或修改 Windows 排程，日常使用及設定方式見 [README](README.md)。
 
@@ -60,11 +62,16 @@ npm run workflow -- archive <change-name>
 |---|---|
 | `arxiv_digest/`、`tests/` | 正式程式與離線功能測試 |
 | `scripts/`、`package*.json`、`workflow.config.json` | 已接入的工作流程工具與設定 |
+| `workflow.local.json`、`.workflow/private/` | 本機 Python 路徑與原始除錯日誌，不進版控 |
 | `openspec/specs/`、`openspec/changes/archive/` | 現行規格與歷史變更 |
 | `.workflow/baselines/`、`evidence/`、`receipts/` | 歷史基準、原始驗證輸出及封存回條 |
 | `.workflow/maintenance/` | 整理作業的獨立驗證紀錄，不取代功能變更回條 |
 
 歷史證據可能含當時試驗副本的路徑，不能當作現在原專案剛跑完的結果。不得竄改其中的歷史事實、測試結果或決策；為保護隱私可移除個人電腦路徑，但須留下修改紀錄，並標示修改後證據的驗證限制。試驗過程檔已另行封存，位置與本次驗證結果見 [整理紀錄](docs/MAINTENANCE-2026-09-27.md)。
+
+升級後產生的新證據會先把個人路徑換成 `<PROJECT_ROOT>`、`<HOME>` 等標記再計算雜湊，原始日誌只留在本機 `.workflow/private/`。升級前的 7 份證據、7 份回條與 4 份維護紀錄仍含個人路徑，尚未去識別化。
+
+提交／推送前的 Git hooks 尚未啟用。舊紀錄與 Git 歷史仍含個人路徑，現在啟用會攔下推送；先依 [路徑隱私說明](docs/PRIVACY.md) 整理舊資料，再執行 `npm run privacy:install`。`npm run privacy:check`、`npm run privacy:history` 只掃描、不改檔，可隨時執行。
 
 `config.ini` 是本機設定，不提交 Git。`node_modules/` 與 Python 快取可重新建立，不作為原始碼保存。Git 與專案資料夾備份不包含外部 MySQL 資料庫。
 
