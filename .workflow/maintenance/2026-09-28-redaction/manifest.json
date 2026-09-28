@@ -1,0 +1,160 @@
+{
+  "redactedAt": "2026-09-28",
+  "record": "docs/REDACTION-2026-09-28.md",
+  "hashes": "originalSha256 = exact pre-redaction bytes (kept in local backup and Git history before this commit); publicCopySha256 = bytes of the redacted public copy. Neither replaces the logHash/digest fields inside the records.",
+  "files": [
+    {
+      "file": ".workflow/evidence/add-feedback-collect.json",
+      "replaced": [
+        "<LOCAL_PATH>",
+        "<PROJECT_ROOT>"
+      ],
+      "originalSha256": "d5f679554f2cdcf9b6de48bec0825d3a2def0ac071c54e37060ed4b982b70aa0",
+      "publicCopySha256": "26d167023c0b642c331a6fd85a828a0d85553bd53ad572fbf04c7a8ddefecec9"
+    },
+    {
+      "file": ".workflow/evidence/add-push-translation.json",
+      "replaced": [
+        "<LOCAL_PATH>",
+        "<PROJECT_ROOT>"
+      ],
+      "originalSha256": "72c3ff80d0f73bc2e4d225c1ad7a7e7f868f65fd54481531863a766dd6f53153",
+      "publicCopySha256": "4e87d952d0c547667d83700efba16912556cfbf999d33108b57215f7966b2a2c"
+    },
+    {
+      "file": ".workflow/evidence/add-telegram-push.json",
+      "replaced": [
+        "<LOCAL_PATH>",
+        "<PROJECT_ROOT>"
+      ],
+      "originalSha256": "96c8f25d97c56313e2fb22cf1938aea63c06412cda8987d3a3bb1ccdaf23a58e",
+      "publicCopySha256": "5ffd6e176d93d48e8be673cbd4a884a27b553b0fd23469049ea0348fea86f0af"
+    },
+    {
+      "file": ".workflow/evidence/clarify-retry-message.json",
+      "replaced": [
+        "<LOCAL_PATH>",
+        "<TRIAL_COPY_ROOT>"
+      ],
+      "originalSha256": "79887b12145f04658fc6f70c9957d6b445a3ccb4b29640d9aff1411324f55d60",
+      "publicCopySha256": "5ee0e47ac3688a7f8124cfd51709a1486f5c43b86d5b72ff91bd63a482a6a00f"
+    },
+    {
+      "file": ".workflow/evidence/fix-announce-lag.json",
+      "replaced": [
+        "<LOCAL_PATH>",
+        "<PROJECT_ROOT>"
+      ],
+      "originalSha256": "bf8825b1608a904d077e382a6a49802bdee0ae318d17caae14b7201e00e5296d",
+      "publicCopySha256": "1bbbb6ca3b47e69b4d5248c20240b95e0c859ea78e2f3afb59c43d22344de2ed"
+    },
+    {
+      "file": ".workflow/evidence/fix-fetch-checkpoint.json",
+      "replaced": [
+        "<LOCAL_PATH>",
+        "<TRIAL_COPY_ROOT>"
+      ],
+      "originalSha256": "994938a345c039a9e3bcfc61aaa657ed4bb75ddd15a1422c9e21d77ff083742d",
+      "publicCopySha256": "07bcfb09e46b7bb81b98fb9cbc9816b58a7dc22bad9ad44ee71245b4cbc695a8"
+    },
+    {
+      "file": ".workflow/evidence/fix-translation-simplified.json",
+      "replaced": [
+        "<LOCAL_PATH>",
+        "<PROJECT_ROOT>"
+      ],
+      "originalSha256": "3c6baa520781d17755beeda68bf900aaa5bc4082e6f25b7c37e3844770d3f372",
+      "publicCopySha256": "37257390f5ec65a095723064e143333ea34c6f6ac0b78365dfe0a88f1cf558e5"
+    },
+    {
+      "file": ".workflow/maintenance/2026-09-27-docs-sync/offline-tests.json",
+      "replaced": [
+        "<LOCAL_PATH>",
+        "<PROJECT_ROOT>"
+      ],
+      "originalSha256": "e322efa415d7420b4929f85c628b06475f19f55a6bd1547b9eb9c9ca6f75d230",
+      "publicCopySha256": "f21e627a081996e20d4eba89598a8eb34e3d74cc1c36ae4a3bf30cc4f4f06e46"
+    },
+    {
+      "file": ".workflow/maintenance/2026-09-27-docs-sync/spec-validation.json",
+      "replaced": [
+        "<PROJECT_ROOT>"
+      ],
+      "originalSha256": "ede2b7858bbd67adfa6e1a407c07f450390862e6285b46349f716e5318739292",
+      "publicCopySha256": "56eed6c493db0236a8fd1b0862afe9101d3120875efb9a79d2462dcda326a21e"
+    },
+    {
+      "file": ".workflow/maintenance/2026-09-27/offline-tests.json",
+      "replaced": [
+        "<LOCAL_PATH>",
+        "<PROJECT_ROOT>"
+      ],
+      "originalSha256": "9b2dc11a909fa306fd263f2c6b3d03314a461fc7be6a1e0e6bedc50f2a6e32cf",
+      "publicCopySha256": "be7a1a886ae7ed17ff17e3ae1f5045c8d3c09960a452281e6fdb568a96b5e23a"
+    },
+    {
+      "file": ".workflow/maintenance/2026-09-27/spec-validation.json",
+      "replaced": [
+        "<PROJECT_ROOT>"
+      ],
+      "originalSha256": "0939787df50e6fe10fc639803987520bd302924432f5057bbb354b9ad8606df9",
+      "publicCopySha256": "964ecf87b9af6377d8799d479ac21b287eedf039f7a3fa67fb4794a79bbc7d67"
+    },
+    {
+      "file": ".workflow/receipts/add-feedback-collect.json",
+      "replaced": [
+        "<PROJECT_ROOT>"
+      ],
+      "originalSha256": "ffdc1192ab6a8e517936fee0efc6a22889f7515423c67a8c29e7eb8085dd5f58",
+      "publicCopySha256": "a4dfc26d0bb070a544d0cc79ff3cbf2b0965b70e6bea5afa1120c65411b57e13"
+    },
+    {
+      "file": ".workflow/receipts/add-push-translation.json",
+      "replaced": [
+        "<PROJECT_ROOT>"
+      ],
+      "originalSha256": "60ce07c5f43a46904868c34255bf34b0a46293223fac7b0afc2c3dc7c4915613",
+      "publicCopySha256": "5e1efa6bae97ae3a6cfd2649826fefe022ea2223f5b4710d48ac5b78ab4ec64a"
+    },
+    {
+      "file": ".workflow/receipts/add-telegram-push.json",
+      "replaced": [
+        "<PROJECT_ROOT>"
+      ],
+      "originalSha256": "71f17a9591b16ad27293c36ac89232033e8b2c5c22e7bade7573c1a1ccd64aec",
+      "publicCopySha256": "1b07aa3116c3c3ff3cda73da79bdc6968190160122ab95f51833cdb42d86eea7"
+    },
+    {
+      "file": ".workflow/receipts/clarify-retry-message.json",
+      "replaced": [
+        "<TRIAL_COPY_ROOT>"
+      ],
+      "originalSha256": "a3599f712099bb1926653e24ebe9f0d07a99e178e1d3fddc939728fc2554d465",
+      "publicCopySha256": "787f6f59b628f87dd72196170675617e9564956cd09ab1b8c06d9934bb381a74"
+    },
+    {
+      "file": ".workflow/receipts/fix-announce-lag.json",
+      "replaced": [
+        "<PROJECT_ROOT>"
+      ],
+      "originalSha256": "89771d1ec52891a9efd15f624b4d3f5daeb4a55ed2e2e9d984424439dc68de19",
+      "publicCopySha256": "d79e6d91e4f5cbabb73026de0ff7d10a0ab77500567412bee0774c36c524a7dc"
+    },
+    {
+      "file": ".workflow/receipts/fix-fetch-checkpoint.json",
+      "replaced": [
+        "<TRIAL_COPY_ROOT>"
+      ],
+      "originalSha256": "a0f1bed9461d8818aa37bf1ab1e3e61b4685f0b4e9d4aeaf735f70b8600e570f",
+      "publicCopySha256": "5f7f6f13ea2fabfc439cb47ce7f5b164d0aafd3e1ba5ae4a33b1b555669e9c8c"
+    },
+    {
+      "file": ".workflow/receipts/fix-translation-simplified.json",
+      "replaced": [
+        "<PROJECT_ROOT>"
+      ],
+      "originalSha256": "b61a3aa5c007efd95015108af3aab79f09b2757bc98549224df9078c66b4a61c",
+      "publicCopySha256": "737105dd5460f16a6fdcc31673309915634e11f35c171b6aee618c601c0a27a4"
+    }
+  ]
+}

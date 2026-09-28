@@ -205,7 +205,7 @@ arXiv 在美東時間 20:00 公告：美國夏令時間是台灣早上 8 點，1
 
 `scripts/`、`openspec/`、`tests/`、`package.json` 與 `workflow.config.json` 已是本專案的開發及驗證工具，需要保留。現行入口為平面流程，2026-09-28 已手動更新到模板 0.2.0 的路徑隱私版本（見 [升級紀錄](docs/MAINTENANCE-2026-09-28-template-0.2.md)），不需要重新套用公開模板。
 
-`.workflow/baselines/`、`evidence/`、`receipts/` 保存歷史基準、驗證輸出及封存回條。試驗副本路徑屬於當時紀錄，不能解讀為原專案最近一次測試結果。
+`.workflow/baselines/`、`evidence/`、`receipts/` 保存歷史基準、驗證輸出及封存回條。其中標示 `<TRIAL_COPY_ROOT>` 的是當時的試驗副本，不能解讀為原專案最近一次測試結果；這些舊紀錄的個人路徑已換成通用標記，見 [去識別化紀錄](docs/REDACTION-2026-09-28.md)。
 
 試驗過程檔已另行封存；當天早上的整理及離線驗證見 [整理紀錄](docs/MAINTENANCE-2026-09-27.md)，晚間的文件同步見 [文件同步紀錄](docs/MAINTENANCE-2026-09-27-docs-sync.md)。原專案尚未加入模板隔離副本中的 `preview` 指令。
 

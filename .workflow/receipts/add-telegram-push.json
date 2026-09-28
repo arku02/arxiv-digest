@@ -1,4 +1,12 @@
 {
+  "publicCopy": {
+    "redactedAt": "2026-09-28",
+    "record": "docs/REDACTION-2026-09-28.md",
+    "replaced": [
+      "<PROJECT_ROOT>"
+    ],
+    "note": "Public de-identified copy, not original bytes. Only local path prefixes were replaced; results, digests and logHash are unchanged and refer to the original run."
+  },
   "change": "add-telegram-push",
   "archivedAt": "2026-09-27T08:18:06.031Z",
   "archive": "openspec/changes/archive/2026-09-27-add-telegram-push",

@@ -69,9 +69,9 @@ npm run workflow -- archive <change-name>
 
 歷史證據可能含當時試驗副本的路徑，不能當作現在原專案剛跑完的結果。不得竄改其中的歷史事實、測試結果或決策；為保護隱私可移除個人電腦路徑，但須留下修改紀錄，並標示修改後證據的驗證限制。試驗過程檔已另行封存，位置與本次驗證結果見 [整理紀錄](docs/MAINTENANCE-2026-09-27.md)。
 
-升級後產生的新證據會先把個人路徑換成 `<PROJECT_ROOT>`、`<HOME>` 等標記再計算雜湊，原始日誌只留在本機 `.workflow/private/`。升級前的 7 份證據、7 份回條與 4 份維護紀錄仍含個人路徑，尚未去識別化。
+升級後產生的新證據會先把個人路徑換成 `<PROJECT_ROOT>`、`<HOME>` 等標記再計算雜湊，原始日誌只留在本機 `.workflow/private/`。升級前的 7 份證據、7 份回條與 4 份維護紀錄已改為公開去識別化副本（開頭有 `publicCopy` 欄位），原檔內的雜湊指的是當時的原始執行，詳見 [去識別化紀錄](docs/REDACTION-2026-09-28.md)。
 
-提交／推送前的 Git hooks 尚未啟用。舊紀錄與 Git 歷史仍含個人路徑，現在啟用會攔下推送；先依 [路徑隱私說明](docs/PRIVACY.md) 整理舊資料，再執行 `npm run privacy:install`。`npm run privacy:check`、`npm run privacy:history` 只掃描、不改檔，可隨時執行。
+提交／推送前的 Git hooks 尚未啟用。Git 歷史中的舊版檔案仍含個人路徑，推送前檢查會掃描完整歷史，現在啟用會攔下推送；處理 Git 歷史之後，再依 [路徑隱私說明](docs/PRIVACY.md) 執行 `npm run privacy:install`。`npm run privacy:check`、`npm run privacy:history` 只掃描、不改檔，可隨時執行。
 
 `config.ini` 是本機設定，不提交 Git。`node_modules/` 與 Python 快取可重新建立，不作為原始碼保存。Git 與專案資料夾備份不包含外部 MySQL 資料庫。
 

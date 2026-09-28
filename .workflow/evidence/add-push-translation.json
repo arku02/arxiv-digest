@@ -1,4 +1,13 @@
 {
+  "publicCopy": {
+    "redactedAt": "2026-09-28",
+    "record": "docs/REDACTION-2026-09-28.md",
+    "replaced": [
+      "<LOCAL_PATH>",
+      "<PROJECT_ROOT>"
+    ],
+    "note": "Public de-identified copy, not original bytes. Only local path prefixes were replaced; results, digests and logHash are unchanged and refer to the original run."
+  },
   "change": "add-push-translation",
   "passed": true,
   "finishedAt": "2026-09-27T11:34:37.817Z",
