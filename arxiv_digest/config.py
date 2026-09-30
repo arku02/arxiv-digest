@@ -102,11 +102,39 @@ class TranslateConfig:
 
 
 @dataclass(frozen=True)
+class RetryConfig:
+    """抓取失敗後的每小時補抓設定。保存原始字串，補抓時才驗證，填錯不影響 daily。"""
+
+    enabled: str = "true"
+    # 本機時間，start_hour <= 現在小時 < end_hour 才補抓；避開 09:30 的 daily 與半夜推送
+    start_hour: str = "10"
+    end_hour: str = "22"
+
+    def validated(self) -> tuple[int, int] | None:
+        """關閉時回傳 None；開啟時回傳 (start_hour, end_hour)。"""
+        flag = ConfigParser.BOOLEAN_STATES.get(self.enabled.strip().lower())
+        if flag is None:
+            raise ValueError("config.ini 的 [RETRY] enabled 必須是 true 或 false")
+        if not flag:
+            return None
+        hours = []
+        for name, text in (("start_hour", self.start_hour), ("end_hour", self.end_hour)):
+            value = text.strip()
+            if not value.isdigit() or int(value) > 24:
+                raise ValueError(f"config.ini 的 [RETRY] {name} 必須是 0～24 的整數")
+            hours.append(int(value))
+        if hours[0] >= hours[1]:
+            raise ValueError("config.ini 的 [RETRY] start_hour 必須小於 end_hour")
+        return hours[0], hours[1]
+
+
+@dataclass(frozen=True)
 class Config:
     db: DBConfig
     arxiv: ArxivConfig
     telegram: TelegramConfig = TelegramConfig()
     translate: TranslateConfig = TranslateConfig()
+    retry: RetryConfig = RetryConfig()
 
 
 def load_config(path: Path | str | None = None) -> Config:
@@ -163,4 +191,10 @@ def load_config(path: Path | str | None = None) -> Config:
         timeout=parser.get("TRANSLATE", "timeout", fallback="300"),
     )
 
-    return Config(db=db, arxiv=arxiv, telegram=telegram, translate=translate)
+    retry = RetryConfig(
+        enabled=parser.get("RETRY", "enabled", fallback="true"),
+        start_hour=parser.get("RETRY", "start_hour", fallback="10"),
+        end_hour=parser.get("RETRY", "end_hour", fallback="22"),
+    )
+
+    return Config(db=db, arxiv=arxiv, telegram=telegram, translate=translate, retry=retry)

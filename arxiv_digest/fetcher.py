@@ -33,6 +33,15 @@ _ID_PATTERN = re.compile(r"/abs/(?P<id>.+?)(?:v\d+)?$")
 # submittedDate 區間要求的時間格式（UTC）
 _DATE_FORMAT = "%Y%m%d%H%M"
 
+# 上限錯誤訊息的開頭。補抓靠它從 runs.error 認出「要操作者調設定、重試也沒用」的失敗
+LIMIT_ERROR_PREFIX = "已達單次上限"
+
+# 被限流（429）或服務暫停（503）時，request_delay 的指數退避只有幾秒，太短。
+# 有 Retry-After 就照它等，但不超過上限；沒有就等 60、120 秒
+RATE_LIMIT_STATUS = (429, 503)
+RATE_LIMIT_BACKOFF = 60.0
+MAX_RETRY_AFTER = 300
+
 
 class FetchLimitExceeded(RuntimeError):
     """The requested window still contains papers beyond the configured cap."""
@@ -66,6 +75,14 @@ def extract_arxiv_id(id_url: str) -> str:
         logger.warning("無法解析 arxiv_id：%s", id_url)
         return id_url.strip()
     return match.group("id")
+
+
+def _retry_after(response) -> int | None:
+    """讀 Retry-After 的秒數，上限 MAX_RETRY_AFTER；沒有或是日期格式就回傳 None。"""
+    value = str(response.headers.get("Retry-After", "")).strip()
+    if not value.isdigit():
+        return None
+    return min(int(value), MAX_RETRY_AFTER)
 
 
 class ArxivFetcher:
@@ -131,7 +148,7 @@ class ArxivFetcher:
             probe = self._parse(self._request(query, start=len(papers), page_size=1))
             if probe:
                 raise FetchLimitExceeded(
-                    f"已達單次上限 {self.config.max_results} 筆，區間尚未抓完；"
+                    f"{LIMIT_ERROR_PREFIX} {self.config.max_results} 筆，區間尚未抓完；"
                     f"查詢區間 UTC {since:%Y-%m-%d %H:%M} ~ {until:%Y-%m-%d %H:%M}。"
                     "本批次未寫入，續抓起點保留。請調高 max_results 後重跑；"
                     "系統不會自動調高上限。"
@@ -165,7 +182,7 @@ class ArxivFetcher:
         page_size: int,
         max_retries: int = 3,
     ) -> str:
-        """發送一次 API 請求，失敗時以指數退避重試。"""
+        """發送一次 API 請求，失敗時以指數退避重試；被限流時等久一點。"""
         params = {
             "search_query": query,
             "start": start,
@@ -178,18 +195,23 @@ class ArxivFetcher:
 
         for attempt in range(max_retries):
             self._throttle()
+            backoff = self.config.request_delay * (2 ** attempt)
             try:
                 response = self.session.get(API_URL, params=params, timeout=30)
                 if response.status_code == 200:
                     return response.text
                 last_error = RuntimeError(f"HTTP {response.status_code}")
+                if response.status_code in RATE_LIMIT_STATUS:
+                    wait = _retry_after(response)
+                    backoff = RATE_LIMIT_BACKOFF * (2 ** attempt) if wait is None else wait
             except requests.RequestException as exc:
                 last_error = exc
 
-            backoff = self.config.request_delay * (2 ** attempt)
+            if attempt + 1 == max_retries:
+                break
             logger.warning(
-                "請求失敗（%s），第 %d/%d 次重試，%.1f 秒後再試",
-                last_error, attempt + 1, max_retries, backoff,
+                "請求失敗（%s），%.1f 秒後重試（第 %d/%d 次）",
+                last_error, backoff, attempt + 2, max_retries,
             )
             time.sleep(backoff)
 

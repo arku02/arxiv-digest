@@ -67,7 +67,7 @@ class CollectTests(unittest.TestCase):
         self.store.db.connection.executescript('''
             CREATE TABLE feedback (id INTEGER PRIMARY KEY, paper_id INTEGER UNIQUE, label INTEGER NOT NULL,
                 created_at TEXT DEFAULT '2026-09-27 16:30:00');
-            CREATE TABLE runs (id INTEGER PRIMARY KEY, window_start TEXT, window_end TEXT, started_at TEXT,
+            CREATE TABLE IF NOT EXISTS runs (id INTEGER PRIMARY KEY, window_start TEXT, window_end TEXT, started_at TEXT,
                 finished_at TEXT, status TEXT, fetched INTEGER, new_count INTEGER, error TEXT);
         ''')
         self.store.add_batch(NOW, 'success')

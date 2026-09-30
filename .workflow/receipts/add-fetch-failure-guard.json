@@ -1,0 +1,57 @@
+{
+  "change": "add-fetch-failure-guard",
+  "archivedAt": "2026-09-30T08:00:47.967Z",
+  "archive": "openspec/changes/archive/2026-09-30-add-fetch-failure-guard",
+  "verifiedDigest": "90983f483ed61286462683f846a15c8ffc211832c3f92c2de0e5b955986046dc",
+  "specs": {
+    "openspec/specs/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "openspec/specs/feedback-collect/spec.md": "a90c1e5ef38f44fd627d65950601357faf891fab0e0d922f8c28d99e8f803f34",
+    "openspec/specs/fetch-checkpoint/spec.md": "8df4489faacf24025006478fc545e43f2add8628f90a1c4c1b6a51157dc3d271",
+    "openspec/specs/telegram-push/spec.md": "4cc08e302ed1de9521c9683de309eb7b396e7f564061399b73d7357db3982843"
+  },
+  "validation": {
+    "items": [
+      {
+        "id": "feedback-collect",
+        "type": "spec",
+        "valid": true,
+        "issues": [],
+        "durationMs": 12
+      },
+      {
+        "id": "fetch-checkpoint",
+        "type": "spec",
+        "valid": true,
+        "issues": [],
+        "durationMs": 6
+      },
+      {
+        "id": "telegram-push",
+        "type": "spec",
+        "valid": true,
+        "issues": [],
+        "durationMs": 2
+      }
+    ],
+    "summary": {
+      "totals": {
+        "items": 3,
+        "passed": 3,
+        "failed": 0
+      },
+      "byType": {
+        "spec": {
+          "items": 3,
+          "passed": 3,
+          "failed": 0
+        }
+      }
+    },
+    "version": "1.0",
+    "root": {
+      "path": "<PROJECT_ROOT>",
+      "source": "nearest"
+    }
+  },
+  "output": "{\n  \"archive\": {\n    \"change\": \"add-fetch-failure-guard\",\n    \"archivedAs\": \"2026-09-30-add-fetch-failure-guard\",\n    \"path\": \"<PROJECT_ROOT><NETWORK_PATH>\",\n    \"specsUpdated\": true,\n    \"totals\": {\n      \"added\": 4,\n      \"modified\": 0,\n      \"removed\": 0,\n      \"renamed\": 0\n    }\n  },\n  \"root\": {\n    \"path\": \"<PROJECT_ROOT>\",\n    \"source\": \"nearest\"\n  }\n}\n"
+}

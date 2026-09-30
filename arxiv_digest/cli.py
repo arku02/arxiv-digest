@@ -6,16 +6,20 @@
     python -m arxiv_digest status           看最近的執行紀錄
     python -m arxiv_digest push             推送今天的論文到 Telegram
     python -m arxiv_digest push --dry-run   只預覽，不發送
-    python -m arxiv_digest collect          收集 Telegram 按鈕回饋
+    python -m arxiv_digest collect          收集 Telegram 按鈕回饋，必要時補抓補推
 
 排程只要固定跑 daily 就好。它會自己從「上次成功執行涵蓋到的時間點」接續，
 所以筆電關機好幾天再開，中間的論文一樣補得回來。接續時會再往回重查
 lookback_days 天，因為 arXiv 論文要公告後才查得到，上次執行時可能還看不到。
+
+抓取失敗時 daily 用 Telegram 通知一次，push 暫停；每小時的 collect 會在
+[RETRY] 時段內重抓，成功就補推，不必另外加排程。
 """
 
 from __future__ import annotations
 
 import argparse
+import html
 import logging
 import random
 import re
@@ -26,12 +30,15 @@ from typing import Callable
 
 from arxiv_digest import notifier
 from arxiv_digest.config import Config, load_config
-from arxiv_digest.fetcher import ArxivFetcher
+from arxiv_digest.fetcher import LIMIT_ERROR_PREFIX, ArxivFetcher
 from arxiv_digest.notifier import TelegramClient, format_message, keyboard
 from arxiv_digest.store import Store
 from arxiv_digest.translator import OllamaTranslator
 
 logger = logging.getLogger("arxiv_digest")
+
+# 最近一次抓取停在 running 超過這麼久，視為程序已中斷，補抓時重抓
+RUNNING_STALE = timedelta(hours=1)
 
 
 def utcnow() -> datetime:
@@ -41,6 +48,11 @@ def utcnow() -> datetime:
     才不會出現「aware 與 naive 相減」的 TypeError。
     """
     return datetime.now(timezone.utc).replace(tzinfo=None)
+
+
+def localnow() -> datetime:
+    """本機時間。補抓時段依使用者作息，用本機時間判斷。"""
+    return datetime.now()
 
 
 def run_fetch(config: Config, since: datetime | None = None) -> int:
@@ -117,6 +129,14 @@ def run_push(
 
     with Store(config.db) as store:
         store.init_schema()
+
+        # 抓取失敗時候選池是空的，照推只會送出 0 篇又記成功；不建批次，下界就不會動
+        latest = store.recent_runs(limit=1)
+        if latest and latest[0]["status"] != "success":
+            reason = f"最近一次抓取狀態為 {latest[0]['status']}，暫不推送；抓取成功後再推"
+            if not dry_run:
+                raise RuntimeError(reason)
+            logger.warning("%s（預覽照常進行）", reason)
 
         started_at = store.db_now()
         after = store.last_success_push_start()
@@ -233,6 +253,91 @@ def run_collect(config: Config) -> dict:
     return counts
 
 
+def _retry_note(config: Config) -> str:
+    """通知裡說明接下來會怎麼處理。"""
+    try:
+        window = config.retry.validated()
+    except ValueError:
+        window = None
+    if window is None:
+        return "不會自動重試，請稍後手動重跑 daily 與 push。"
+    return f"每天 {window[0]:02d}:00～{window[1]:02d}:00 每小時自動重試，成功後會補推。"
+
+
+def notify_fetch_failure(config: Config, error: Exception) -> None:
+    """抓取失敗時用 Telegram 通知。同一段連續失敗只通知第一次。
+
+    通知只是附加功能：Telegram 沒設定或發送失敗都只記錄，不影響抓取結果與退出碼。
+    """
+    try:
+        token, chat_id = config.telegram.credentials()
+    except ValueError:
+        logger.info("未設定 Telegram，不發送抓取失敗通知")
+        return
+    try:
+        with Store(config.db) as store:
+            runs = store.recent_runs(limit=2)
+        if len(runs) > 1 and runs[1]["status"] == "failed":
+            logger.info("前一次抓取也失敗，已通知過，不重複通知")
+            return
+        reason = str(error)
+        if reason.startswith(LIMIT_ERROR_PREFIX):
+            next_step = "需要調高 config.ini 的 max_results 後重跑 daily，系統不會自動重試。"
+        else:
+            next_step = _retry_note(config)
+        TelegramClient(token, chat_id).send(
+            "⚠️ <b>arXiv 論文抓取失敗，今天先不推送</b>\n\n"
+            f"原因：{html.escape(reason[:300])}\n\n"
+            f"{html.escape(next_step)}"
+        )
+        logger.info("已發送抓取失敗通知")
+    except Exception as exc:
+        logger.warning("抓取失敗通知發送失敗：%s", exc)
+
+
+def _needs_retry(run: dict, now: datetime) -> bool:
+    """最近一次抓取是否該由補抓重來。上限錯誤要操作者調設定，重抓也沒用。"""
+    if run["status"] == "failed":
+        return not (run["error"] or "").startswith(LIMIT_ERROR_PREFIX)
+    if run["status"] == "running":
+        # 剛開始的可能還在跑，重抓會跟它搶
+        return run["started_at"] is not None and now - run["started_at"] >= RUNNING_STALE
+    return False
+
+
+def run_catch_up(config: Config) -> bool:
+    """collect 之後檢查：最近一次抓取沒成功，就在 [RETRY] 時段內重抓，成功才推送。
+
+    自己處理所有例外，才不會蓋掉 collect 本身的錯誤。
+
+    Returns:
+        沒事可做或補抓補推成功為 True；設定錯誤、重抓或推送失敗為 False。
+    """
+    try:
+        window = config.retry.validated()
+        if window is None or not window[0] <= localnow().hour < window[1]:
+            return True
+        with Store(config.db) as store:
+            store.init_schema()
+            runs = store.recent_runs(limit=1)
+            now = store.db_now()
+        if not runs or not _needs_retry(runs[0], now):
+            return True
+
+        logger.info("最近一次抓取狀態為 %s，重新抓取", runs[0]["status"])
+        try:
+            run_fetch(config)
+        except Exception as exc:
+            notify_fetch_failure(config, exc)
+            logger.error("補抓仍失敗，下一次 collect 在補抓時段內會再試")
+            return False
+        run_push(config)
+        return True
+    except Exception as exc:
+        logger.error("補抓失敗：%s", exc)
+        return False
+
+
 def cmd_init_db(args: argparse.Namespace, config: Config) -> int:
     with Store(config.db) as store:
         store.init_schema()
@@ -241,7 +346,11 @@ def cmd_init_db(args: argparse.Namespace, config: Config) -> int:
 
 
 def cmd_daily(args: argparse.Namespace, config: Config) -> int:
-    run_fetch(config)
+    try:
+        run_fetch(config)
+    except Exception as exc:
+        notify_fetch_failure(config, exc)
+        raise
     return 0
 
 
@@ -257,8 +366,14 @@ def cmd_push(args: argparse.Namespace, config: Config) -> int:
 
 
 def cmd_collect(args: argparse.Namespace, config: Config) -> int:
-    run_collect(config)
-    return 0
+    # 憑證錯誤要在連線資料庫前擋下；補抓推送也需要憑證，一起不做
+    config.telegram.credentials()
+    # 回饋收集失敗也要補抓；補抓的錯誤自己記錄，收集的例外照樣往外拋
+    try:
+        run_collect(config)
+    finally:
+        caught_up = run_catch_up(config)
+    return 0 if caught_up else 1
 
 
 def cmd_status(args: argparse.Namespace, config: Config) -> int:
@@ -317,7 +432,7 @@ def build_parser() -> argparse.ArgumentParser:
     push = sub.add_parser("push", help="推送今天的論文到 Telegram")
     push.add_argument("--dry-run", action="store_true", help="只印出內容，不發送也不記錄")
 
-    sub.add_parser("collect", help="收集 Telegram 按鈕回饋")
+    sub.add_parser("collect", help="收集 Telegram 按鈕回饋，抓取失敗時補抓補推")
 
     return parser
 

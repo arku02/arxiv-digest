@@ -44,3 +44,11 @@ model = qwen3.5:9b
 url = http://127.0.0.1:11434
 # 單篇翻譯最多等幾秒；用 CPU 跑 9B 模型每篇約 45～65 秒
 timeout = 300
+
+[RETRY]
+# 抓取失敗時（例如 arXiv 回 429 請求太頻繁），push 會暫停，並在 Telegram 通知一次。
+# 之後每小時的 collect 會在本機時間 start_hour～end_hour 之間重抓，成功就補推。
+# 設 enabled = false 可關閉自動補抓
+enabled = true
+start_hour = 10
+end_hour = 22

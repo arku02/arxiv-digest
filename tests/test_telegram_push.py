@@ -34,7 +34,7 @@ database = offline
 [ARXIV]
 categories = cs.CL
 '''
-DATETIME_KEYS = ('started_at', 'created_at', 'finished_at', 'now')
+DATETIME_KEYS = ('started_at', 'created_at', 'finished_at', 'now', 'window_start', 'window_end')
 
 
 class Cursor:
@@ -81,6 +81,8 @@ class SQLiteConnection:
                 sent INTEGER DEFAULT 0, status TEXT, error TEXT, finished_at TEXT);
             CREATE TABLE pushes (id INTEGER PRIMARY KEY, batch_id INTEGER, paper_id INTEGER UNIQUE,
                 chat_id TEXT, message_id INTEGER, pushed_at TEXT DEFAULT CURRENT_TIMESTAMP);
+            CREATE TABLE runs (id INTEGER PRIMARY KEY, window_start TEXT, window_end TEXT, started_at TEXT,
+                finished_at TEXT, status TEXT, fetched INTEGER, new_count INTEGER, error TEXT);
         ''')
 
     def cursor(self):

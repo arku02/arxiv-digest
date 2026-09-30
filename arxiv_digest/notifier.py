@@ -113,15 +113,17 @@ class TelegramClient:
     def _mask(self, text: str) -> str:
         return text.replace(self.token, "<bot_token>") if self.token else text
 
-    def send(self, text: str, reply_markup: dict) -> int:
-        """送出一則訊息，回傳 Telegram 的 message_id。"""
-        result = self._call("sendMessage", {
+    def send(self, text: str, reply_markup: dict | None = None) -> int:
+        """送出一則訊息，回傳 Telegram 的 message_id。通知類訊息不帶按鈕。"""
+        payload = {
             "chat_id": self.chat_id,
             "text": text,
             "parse_mode": "HTML",
             "link_preview_options": {"is_disabled": True},
-            "reply_markup": reply_markup,
-        })
+        }
+        if reply_markup is not None:
+            payload["reply_markup"] = reply_markup
+        result = self._call("sendMessage", payload)
         return result["message_id"]
 
     def get_updates(self, offset: int | None) -> list[dict]:

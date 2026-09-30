@@ -73,7 +73,7 @@ python -m arxiv_digest backfill --days 7  # 回頭補抓過去 7 天
 python -m arxiv_digest status             # 看最近的執行紀錄
 python -m arxiv_digest push --dry-run     # 預覽今天要推送的論文，不發送
 python -m arxiv_digest push               # 推送到 Telegram
-python -m arxiv_digest collect            # 收集按鈕回饋
+python -m arxiv_digest collect            # 收集按鈕回饋；抓取失敗時順便補抓補推
 ```
 
 排程只要固定跑 `daily`。它從 `runs` 表裡「上次成功執行涵蓋到的時間點」往前 `lookback_days` 天（預設 4）接續，
@@ -104,6 +104,20 @@ python -m arxiv_digest backfill --days 10
 上限錯誤會顯示此次查詢的 UTC 起訖時間（分鐘精度），並明確說明系統不會自動調高上限，方便判斷重試範圍。
 
 此修正不會自動找回以前已被誤標 success 的漏抓資料；需要另外指定 backfill 範圍。仍假設單一排程，沒有索引快照或所有資料庫寫入錯誤的完整性保證。
+
+### 抓取失敗時
+
+arXiv 有時會回 HTTP 429（請求太頻繁）或 503。程式會照回應裡的 Retry-After 等（最多 5 分鐘），沒有的話等 60、120 秒再試；試 3 次仍失敗才算這次抓取失敗。
+
+抓取失敗時：
+
+1. `daily` 在 Telegram 發一則沒有按鈕的通知，說明原因與後續處理。連續失敗只通知第一次，不會每小時洗版。
+2. `push` 看到最近一次抓取沒成功就不推送、不建立批次，退出碼為 1，排程器會顯示失敗。論文不會漏掉，抓取成功後的下一次推送會一起抽。
+3. 每小時的 `collect` 收完回饋後，若最近一次抓取失敗，且本機時間在 `[RETRY]` 的 `start_hour`～`end_hour`（預設 10:00～22:00），就重抓；成功就馬上推送。時段外不重抓，隔天 09:30 的排程照常處理。
+
+上限錯誤（`max_results` 不夠）重抓也沒用，不會自動重試，通知會提示調高設定。執行中（running）超過 1 小時的紀錄視為中斷，也會重抓。不想自動補抓時，在 `config.ini` 設 `[RETRY] enabled = false`。
+
+2026-09-30 就是這個情況：09:30 的抓取遇到 429 失敗，推送照跑卻送出 0 篇，排程器還顯示成功。
 
 ### Telegram 推送
 
@@ -179,6 +193,14 @@ arXiv 在美東時間 20:00 公告：美國夏令時間是台灣早上 8 點，1
 - 「設定」頁勾選「錯過排定的開始時間後，盡快執行工作」，關機錯過時開機後補跑
 
 收集回饋另外用「建立工作」（不是「建立基本工作」）建一個：觸發程序選「每日」，進階設定勾選「重複工作間隔：1 小時」、「持續時間：不限制」，引數填 `-m arxiv_digest collect`，程式與開始位置同上。
+
+想留下執行紀錄，可以把動作改成用 `cmd.exe` 執行並把輸出附加到 `logs\` 下的檔案（`*.log` 不進版控），例如引數填：
+
+```text
+/d /c set PYTHONIOENCODING=utf-8&& "<Python 路徑>" -m arxiv_digest daily >> logs\daily.log 2>&1
+```
+
+工作是用系統管理員權限建立的話，之後修改也需要系統管理員權限。
 
 「程式或指令碼」填的是實際要用的 Python 路徑：請填入本機實際路徑，
 若改用虛擬環境則換成 `<專案目錄>\.venv\Scripts\python.exe`。
