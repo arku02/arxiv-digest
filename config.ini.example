@@ -52,3 +52,10 @@ timeout = 300
 enabled = true
 start_hour = 10
 end_hour = 22
+
+[BACKUP]
+# backup 指令把推送與回饋紀錄存成 pushes.csv，提交並推送到這個資料夾的 git repo。
+# 資料夾要先 clone 好私人 repo；留空代表專案旁的 arxiv-digest-data
+dir =
+# 設 false 只在本機提交，不推送到 GitHub
+push = true

@@ -13,6 +13,9 @@ from pathlib import Path
 # 專案根目錄下的 config.ini（arxiv_digest/ 的上一層）
 DEFAULT_CONFIG_PATH = Path(__file__).resolve().parent.parent / "config.ini"
 
+# 回饋備份的預設資料夾名稱，放在專案根目錄旁邊，不在這個 repo 裡
+DEFAULT_BACKUP_DIRNAME = "arxiv-digest-data"
+
 # config.ini.example 的範例值開頭，例如 YOUR_BOT_TOKEN_HERE
 PLACEHOLDER_PREFIX = "YOUR_"
 
@@ -129,12 +132,32 @@ class RetryConfig:
 
 
 @dataclass(frozen=True)
+class BackupConfig:
+    """回饋備份設定。保存原始字串，backup 時才驗證，填錯不影響其他指令。"""
+
+    # 空字串代表預設：專案根目錄旁的 arxiv-digest-data（私人 repo 的 clone）
+    dir: str = ""
+    push: str = "true"
+
+    def resolved(self) -> tuple[Path, bool]:
+        """回傳 (備份資料夾, 是否 git push)。相對路徑以專案根目錄為基準。"""
+        flag = ConfigParser.BOOLEAN_STATES.get(self.push.strip().lower())
+        if flag is None:
+            raise ValueError("config.ini 的 [BACKUP] push 必須是 true 或 false")
+        root = DEFAULT_CONFIG_PATH.parent
+        text = self.dir.strip()
+        directory = root / text if text else root.parent / DEFAULT_BACKUP_DIRNAME
+        return directory, flag
+
+
+@dataclass(frozen=True)
 class Config:
     db: DBConfig
     arxiv: ArxivConfig
     telegram: TelegramConfig = TelegramConfig()
     translate: TranslateConfig = TranslateConfig()
     retry: RetryConfig = RetryConfig()
+    backup: BackupConfig = BackupConfig()
 
 
 def load_config(path: Path | str | None = None) -> Config:
@@ -197,4 +220,11 @@ def load_config(path: Path | str | None = None) -> Config:
         end_hour=parser.get("RETRY", "end_hour", fallback="22"),
     )
 
-    return Config(db=db, arxiv=arxiv, telegram=telegram, translate=translate, retry=retry)
+    backup = BackupConfig(
+        dir=parser.get("BACKUP", "dir", fallback=""),
+        push=parser.get("BACKUP", "push", fallback="true"),
+    )
+
+    return Config(
+        db=db, arxiv=arxiv, telegram=telegram, translate=translate, retry=retry, backup=backup
+    )

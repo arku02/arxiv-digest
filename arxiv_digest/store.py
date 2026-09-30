@@ -481,6 +481,23 @@ class Store:
             labels = {row["label"]: row["n"] for row in cursor.fetchall()}
         return {"pushed": pushed, "labels": labels}
 
+    def backup_rows(self) -> list[dict]:
+        """每篇已推送論文一列，附批次資訊與回饋；不含 chat_id、message_id。"""
+        with self._require_db().cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT p.arxiv_id, p.title, p.categories, p.published,
+                       s.batch_id, b.pool_size, b.sent AS batch_sent, s.pushed_at,
+                       f.label, f.created_at AS feedback_at
+                FROM pushes AS s
+                JOIN papers AS p ON p.id = s.paper_id
+                JOIN push_batches AS b ON b.id = s.batch_id
+                LEFT JOIN feedback AS f ON f.paper_id = s.paper_id
+                ORDER BY s.pushed_at, p.arxiv_id
+                """
+            )
+            return list(cursor.fetchall())
+
     def count_papers(self) -> int:
         """目前資料庫裡有幾篇論文。"""
         db = self._require_db()

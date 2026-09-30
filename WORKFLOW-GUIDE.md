@@ -11,7 +11,7 @@ python -m pip install -r requirements.txt
 npm ci --ignore-scripts --no-audit --no-fund
 ```
 
-`workflow.config.json` 已登錄 `tests/test_fetch_checkpoint.py`、`tests/test_telegram_push.py`、`tests/test_feedback_collect.py`、`tests/test_push_translation.py` 與 `tests/test_fetch_recovery.py`，不必替換成範例測試路徑。共用設定的 `pythonExecutable` 是可攜的 `python`；本機實際路徑寫在不進版控的 `workflow.local.json`（格式見 [路徑隱私說明](docs/PRIVACY.md)），必須指向已安裝專案套件的 Python。移機或切換虛擬環境時調整本機檔即可；選擇順序為 `WORKFLOW_PYTHON` 環境變數 → `workflow.local.json` → 共用設定。
+`workflow.config.json` 已登錄 `tests/test_fetch_checkpoint.py`、`tests/test_telegram_push.py`、`tests/test_feedback_collect.py`、`tests/test_push_translation.py`、`tests/test_fetch_recovery.py` 與 `tests/test_data_backup.py`，不必替換成範例測試路徑。共用設定的 `pythonExecutable` 是可攜的 `python`；本機實際路徑寫在不進版控的 `workflow.local.json`（格式見 [路徑隱私說明](docs/PRIVACY.md)），必須指向已安裝專案套件的 Python。移機或切換虛擬環境時調整本機檔即可；選擇順序為 `WORKFLOW_PYTHON` 環境變數 → `workflow.local.json` → 共用設定。
 
 安裝後可先執行 `npm run doctor`，檢查 Node、OpenSpec 版本、測試檔與 Python 是否可用；它只檢查環境，不代表測試通過。
 
@@ -23,7 +23,7 @@ npm ci --ignore-scripts --no-audit --no-fund
 npm test
 ```
 
-目前有 91 項功能測試，涵蓋完整抓取、達到上限、保留續抓起點、錯誤提示、公告延遲回看、限流等待、抓取失敗通知與補抓、Telegram 推送、回饋收集、中文翻譯及簡體字修正。測試使用模擬 Atom 回應、模擬 Bot API、模擬 Ollama、固定時間及記憶體資料庫，不讀取 `config.ini`，不連線 arXiv、MySQL、Telegram 或 Ollama。
+目前有 102 項功能測試，涵蓋完整抓取、達到上限、保留續抓起點、錯誤提示、公告延遲回看、限流等待、抓取失敗通知與補抓、Telegram 推送、回饋收集、回饋備份、中文翻譯及簡體字修正。測試使用模擬 Atom 回應、模擬 Bot API、模擬 Ollama、固定時間、記憶體資料庫及暫存資料夾內的本機 git repo，不讀取 `config.ini`，不連線 arXiv、MySQL、Telegram、Ollama 或 GitHub。
 
 SQLite 只驗證查詢邏輯，不代表真實 MySQL 行為已驗證。測試通過也不代表正式排程或外部服務正常。
 

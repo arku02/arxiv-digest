@@ -7,6 +7,7 @@
     python -m arxiv_digest push             推送今天的論文到 Telegram
     python -m arxiv_digest push --dry-run   只預覽，不發送
     python -m arxiv_digest collect          收集 Telegram 按鈕回饋，必要時補抓補推
+    python -m arxiv_digest backup           把推送與回饋紀錄備份到私人 repo
 
 排程只要固定跑 daily 就好。它會自己從「上次成功執行涵蓋到的時間點」接續，
 所以筆電關機好幾天再開，中間的論文一樣補得回來。接續時會再往回重查
@@ -28,7 +29,7 @@ import time
 from datetime import datetime, timedelta, timezone
 from typing import Callable
 
-from arxiv_digest import notifier
+from arxiv_digest import backup, notifier
 from arxiv_digest.config import Config, load_config
 from arxiv_digest.fetcher import LIMIT_ERROR_PREFIX, ArxivFetcher
 from arxiv_digest.notifier import TelegramClient, format_message, keyboard
@@ -376,6 +377,17 @@ def cmd_collect(args: argparse.Namespace, config: Config) -> int:
     return 0 if caught_up else 1
 
 
+def cmd_backup(args: argparse.Namespace, config: Config) -> int:
+    # 設定與資料夾在連線資料庫前檢查
+    directory, push = config.backup.resolved()
+    backup.check_repository(directory)
+    with Store(config.db) as store:
+        store.init_schema()
+        rows = store.backup_rows()
+    backup.save_and_commit(directory, rows, push)
+    return 0
+
+
 def cmd_status(args: argparse.Namespace, config: Config) -> int:
     with Store(config.db) as store:
         store.init_schema()
@@ -434,6 +446,8 @@ def build_parser() -> argparse.ArgumentParser:
 
     sub.add_parser("collect", help="收集 Telegram 按鈕回饋，抓取失敗時補抓補推")
 
+    sub.add_parser("backup", help="把推送與回饋紀錄備份到私人 repo")
+
     return parser
 
 
@@ -444,6 +458,7 @@ COMMANDS = {
     "status": cmd_status,
     "push": cmd_push,
     "collect": cmd_collect,
+    "backup": cmd_backup,
 }
 
 

@@ -8,6 +8,7 @@
     "tests/test_telegram_push.py",
     "tests/test_feedback_collect.py",
     "tests/test_push_translation.py",
-    "tests/test_fetch_recovery.py"
+    "tests/test_fetch_recovery.py",
+    "tests/test_data_backup.py"
   ]
 }

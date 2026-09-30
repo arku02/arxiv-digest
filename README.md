@@ -74,6 +74,7 @@ python -m arxiv_digest status             # 看最近的執行紀錄
 python -m arxiv_digest push --dry-run     # 預覽今天要推送的論文，不發送
 python -m arxiv_digest push               # 推送到 Telegram
 python -m arxiv_digest collect            # 收集按鈕回饋；抓取失敗時順便補抓補推
+python -m arxiv_digest backup             # 把推送與回饋紀錄備份到私人 repo
 ```
 
 排程只要固定跑 `daily`。它從 `runs` 表裡「上次成功執行涵蓋到的時間點」往前 `lookback_days` 天（預設 4）接續，
@@ -158,6 +159,22 @@ arXiv 有時會回 HTTP 429（請求太頻繁）或 503。程式會照回應裡�
 - 只接受來自 `chat_id` 本人、而且對得上推送紀錄的點擊，其他更新會略過
 - 處理到一半失敗時不會向 Telegram 確認，下次會重送同一批，結果不變
 
+### 備份回饋
+
+回饋只存在本機 MySQL，Git 不包含資料庫。`backup` 把每篇已推送論文的 arxiv_id、標題、分類、發表日、批次資訊（候選篇數、送出篇數）、推送時間與回饋標籤存成 `pushes.csv`，提交並推送到另一個**私人** repo。
+
+- 只備份無法重建的部分；論文內容可用 arxiv_id 從 arXiv 重抓
+- 不含 chat_id 與 message_id
+- 資料沒變時不會產生新提交；推送失敗時提交留在本機，下次 `backup` 一起推上去
+- 檔案含 BOM，用 Excel 直接開啟中文不會亂碼
+
+設定一次：
+
+1. 在 GitHub 建立私人 repo（例如 `arxiv-digest-data`）
+2. clone 到專案旁邊：`git clone <repo 網址> ../arxiv-digest-data`
+3. 位置不同時，在 `config.ini` 的 `[BACKUP] dir` 指定（相對路徑以專案根目錄為基準）
+4. 執行 `python -m arxiv_digest backup`，確認 repo 出現 `pushes.csv`
+
 ### 離線驗證與變更流程
 
 本專案使用 [整合工作流程](WORKFLOW-GUIDE.md)，規則見 [PROJECT-RULES.md](PROJECT-RULES.md)。OpenSpec 管理規格；Python unittest 驗證功能。
@@ -183,7 +200,7 @@ workflow.config.json 的 pythonExecutable 是可攜的 `python`；若要固定�
 
 「開始位置」不能省略，否則找不到 `config.ini`。
 
-要推送的話，在同一個工作的「動作」頁再新增一個動作，程式與開始位置相同、引數填 `-m arxiv_digest push`。多個動作會依序執行，推送會在抓取之後；開啟翻譯時推送約需 10 分鐘。
+要推送的話，在同一個工作的「動作」頁再新增一個動作，程式與開始位置相同、引數填 `-m arxiv_digest push`。多個動作會依序執行，推送會在抓取之後；開啟翻譯時推送約需 10 分鐘。要備份回饋，再新增第三個動作，引數填 `-m arxiv_digest backup`。
 
 arXiv 在美東時間 20:00 公告：美國夏令時間是台灣早上 8 點，11 月初夏令時間結束後變成 9 點。排程設在 **09:30**，全年都能讓當天新論文進候選。
 
@@ -240,6 +257,7 @@ arxiv_digest/
 ├── store.py      MySQL：建表、去重寫入、執行與推送紀錄
 ├── notifier.py   Telegram：訊息格式、回饋按鈕、推送與讀取更新
 ├── translator.py 本機 Ollama 翻譯與簡體字修正
+├── backup.py     推送與回饋紀錄匯出成 CSV，提交並推送到私人 repo
 └── cli.py        命令列進入點
 ```
 
