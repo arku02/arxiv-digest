@@ -265,8 +265,13 @@ def _retry_note(config: Config) -> str:
     return f"每天 {window[0]:02d}:00～{window[1]:02d}:00 每小時自動重試，成功後會補推。"
 
 
+def _is_limit_error(text: str | None) -> bool:
+    """是否為上限錯誤。上限錯誤要操作者調設定，其他錯誤會自動補抓，兩者後續處理不同。"""
+    return (text or "").startswith(LIMIT_ERROR_PREFIX)
+
+
 def notify_fetch_failure(config: Config, error: Exception) -> None:
-    """抓取失敗時用 Telegram 通知。同一段連續失敗只通知第一次。
+    """抓取失敗時用 Telegram 通知。同一段同類型的連續失敗只通知第一次。
 
     通知只是附加功能：Telegram 沒設定或發送失敗都只記錄，不影響抓取結果與退出碼。
     """
@@ -278,11 +283,13 @@ def notify_fetch_failure(config: Config, error: Exception) -> None:
     try:
         with Store(config.db) as store:
             runs = store.recent_runs(limit=2)
-        if len(runs) > 1 and runs[1]["status"] == "failed":
-            logger.info("前一次抓取也失敗，已通知過，不重複通知")
-            return
         reason = str(error)
-        if reason.startswith(LIMIT_ERROR_PREFIX):
+        # 類型改變（例如補抓從 429 變成撞上限）時後續處理不同，要再通知
+        if (len(runs) > 1 and runs[1]["status"] == "failed"
+                and _is_limit_error(runs[1]["error"]) == _is_limit_error(reason)):
+            logger.info("前一次抓取也是同類型失敗，已通知過，不重複通知")
+            return
+        if _is_limit_error(reason):
             next_step = "需要調高 config.ini 的 max_results 後重跑 daily，系統不會自動重試。"
         else:
             next_step = _retry_note(config)
@@ -299,7 +306,7 @@ def notify_fetch_failure(config: Config, error: Exception) -> None:
 def _needs_retry(run: dict, now: datetime) -> bool:
     """最近一次抓取是否該由補抓重來。上限錯誤要操作者調設定，重抓也沒用。"""
     if run["status"] == "failed":
-        return not (run["error"] or "").startswith(LIMIT_ERROR_PREFIX)
+        return not _is_limit_error(run["error"])
     if run["status"] == "running":
         # 剛開始的可能還在跑，重抓會跟它搶
         return run["started_at"] is not None and now - run["started_at"] >= RUNNING_STALE

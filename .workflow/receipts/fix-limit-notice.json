@@ -1,0 +1,65 @@
+{
+  "change": "fix-limit-notice",
+  "archivedAt": "2026-10-02T17:17:34.620Z",
+  "archive": "openspec/changes/archive/2026-10-03-fix-limit-notice",
+  "verifiedDigest": "5fe0557376068ee253099061414ac6a730ee9b52a0eeb33237b630fd5c836cec",
+  "specs": {
+    "openspec/specs/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "openspec/specs/data-backup/spec.md": "f976d77ff7915b5f9222520af5abfb7bee1551ab396ee304b648ccb179ab4b8e",
+    "openspec/specs/feedback-collect/spec.md": "a90c1e5ef38f44fd627d65950601357faf891fab0e0d922f8c28d99e8f803f34",
+    "openspec/specs/fetch-checkpoint/spec.md": "b79aadc4ba815532ea22030d096dac77a9d9993ea9aac85f66121ab8363c3998",
+    "openspec/specs/telegram-push/spec.md": "4cc08e302ed1de9521c9683de309eb7b396e7f564061399b73d7357db3982843"
+  },
+  "validation": {
+    "items": [
+      {
+        "id": "data-backup",
+        "type": "spec",
+        "valid": true,
+        "issues": [],
+        "durationMs": 7
+      },
+      {
+        "id": "feedback-collect",
+        "type": "spec",
+        "valid": true,
+        "issues": [],
+        "durationMs": 2
+      },
+      {
+        "id": "fetch-checkpoint",
+        "type": "spec",
+        "valid": true,
+        "issues": [],
+        "durationMs": 1
+      },
+      {
+        "id": "telegram-push",
+        "type": "spec",
+        "valid": true,
+        "issues": [],
+        "durationMs": 0
+      }
+    ],
+    "summary": {
+      "totals": {
+        "items": 4,
+        "passed": 4,
+        "failed": 0
+      },
+      "byType": {
+        "spec": {
+          "items": 4,
+          "passed": 4,
+          "failed": 0
+        }
+      }
+    },
+    "version": "1.0",
+    "root": {
+      "path": "<PROJECT_ROOT>",
+      "source": "nearest"
+    }
+  },
+  "output": "{\n  \"archive\": {\n    \"change\": \"fix-limit-notice\",\n    \"archivedAs\": \"2026-10-03-fix-limit-notice\",\n    \"path\": \"<PROJECT_ROOT><NETWORK_PATH>\",\n    \"specsUpdated\": true,\n    \"totals\": {\n      \"added\": 0,\n      \"modified\": 1,\n      \"removed\": 0,\n      \"renamed\": 0\n    }\n  },\n  \"root\": {\n    \"path\": \"<PROJECT_ROOT>\",\n    \"source\": \"nearest\"\n  }\n}\n"
+}

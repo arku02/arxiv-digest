@@ -1,0 +1,11 @@
+{
+  "change": "fix-limit-notice",
+  "capturedAt": "2026-10-02T17:15:34.139Z",
+  "specs": {
+    "openspec/specs/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "openspec/specs/data-backup/spec.md": "f976d77ff7915b5f9222520af5abfb7bee1551ab396ee304b648ccb179ab4b8e",
+    "openspec/specs/feedback-collect/spec.md": "a90c1e5ef38f44fd627d65950601357faf891fab0e0d922f8c28d99e8f803f34",
+    "openspec/specs/fetch-checkpoint/spec.md": "8df4489faacf24025006478fc545e43f2add8628f90a1c4c1b6a51157dc3d271",
+    "openspec/specs/telegram-push/spec.md": "4cc08e302ed1de9521c9683de309eb7b396e7f564061399b73d7357db3982843"
+  }
+}

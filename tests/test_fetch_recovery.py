@@ -191,6 +191,25 @@ class RecoveryTests(unittest.TestCase):
         self.assertIn('max_results', text)
         self.assertIn('不會自動重試', text)
 
+    def test_R7_failure_kind_change_notifies(self):
+        store = self.store(('success',), ('failed', 'arXiv API 連續 3 次請求失敗：HTTP 429'))
+        code, logs, arxiv, bot = self.run_cli(['daily'], store, arxiv=ArxivSession([200], total=80))
+        self.assertEqual(code, 1)
+        self.assertIn('max_results', bot.method_calls('sendMessage')[0]['text'])
+
+        store = self.store(('success',), ('failed', LIMIT_ERROR))
+        code, logs, arxiv, bot = self.run_cli(['daily'], store, arxiv=ArxivSession([429]))
+        self.assertEqual(code, 1)
+        text = bot.method_calls('sendMessage')[0]['text']
+        for expected in ('HTTP 429', '10:00', '22:00'):
+            self.assertIn(expected, text)
+
+    def test_R7_consecutive_limit_failure_is_silent(self):
+        store = self.store(('success',), ('failed', LIMIT_ERROR))
+        code, logs, arxiv, bot = self.run_cli(['daily'], store, arxiv=ArxivSession([200], total=80))
+        self.assertEqual(code, 1)
+        self.assertEqual(bot.calls, [])
+
     def test_R7_retry_disabled_asks_for_manual_rerun(self):
         store = self.store(('success',))
         code, logs, arxiv, bot = self.run_cli(['daily'], store, config=with_retry('false'), arxiv=ArxivSession([429]))
